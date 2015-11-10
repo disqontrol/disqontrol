@@ -8,14 +8,27 @@
  * file that was distributed with this source code.
  */
 
-namespace Webtrh\Disqontrol\Producer;
+namespace Disqontrol\Producer;
+
+use Disqontrol\Job\JobInterface;
 
 /**
  * Disqontrol producer interface
  * 
  * A producer can send jobs to the queue for asynchronous processing.
+ *
+ * @author Martin Schlemmer
  */
 interface ProducerInterface
 {
-    
+    /**
+     * Add a job to the queue
+     *
+     * The job must define the queue it should be sent to
+     *
+     * @param JobInterface $job
+     *
+     * @return bool Result of adding the job
+     */
+    public function add(JobInterface $job);
 }
