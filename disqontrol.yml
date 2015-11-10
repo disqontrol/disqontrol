@@ -1,0 +1,212 @@
+disqontrol:
+    # The log directory
+    # Default value: /var/log/disqontrol.log
+    log_dir: /var/log/disqontrol.log
+
+    # The cache directory
+    # Default value: /tmp/disqontrol
+    cache_dir: /tmp/disqontrol
+
+    # The initial connection to Disque
+    # The order of nodes doesn't matter, we connect to a random one
+    # as recommended by the Disque author
+    disque:
+        # Node 1
+        - host: '127.0.0.1'
+          port: 7711
+
+        # Node 2 with a password
+        - host: '127.0.0.1'
+          port: 7712
+          password: 'foo'
+
+    # Defaults for all queues. Each queue can set its own values, too.
+    queue_defaults:
+        # Where should completely failed jobs go?
+        # Default value: 'failed-jobs'
+        failure_queue: 'failed-jobs'
+
+        # How long can a job be processed before timing out (in seconds)?
+        # Default value: 600
+        # Disque argument name: RETRY
+        #
+        # If you plan to run jobs that take longer than 10 minutes, adjust
+        # the maximum process time here or for the particular queue.
+        # Otherwise the jobs will be automatically returned to the queue as
+        # timed out.
+        #
+        # If you set this to 0, the job will be delivered at most once.
+        max_job_process_time: 600
+
+        # How long can a job wait in the queue before getting automatically
+        # deleted (in seconds)?
+        # Default value: 172800
+        # Disque argument name: TTL
+        #
+        # If the job lies unprocessed longer than this, it is automatically
+        # deleted. If you have jobs that you schedule in advance more than
+        # 48 hours, increase this value so they are not purged before they're
+        # up.
+        #
+        # The maximum allowed value is 3932100 seconds, or about 45,5 days.
+        #
+        # @see function generateJobID() in
+        # https://github.com/antirez/disque/blob/master/src/job.c
+        max_job_lifetime: 172800
+
+    # Configuration of queues and their workers
+    queues:
+        # The key ("registration-email") is also the queue name in Disque
+        # That is what you use as a queue name when adding a new job
+        #
+        # The name of the queue is used both as a YAML key as well as a PHP
+        # array key. Thus it must conform to both specifications.
+        #
+        # If the queue name contains any of the following characters, wrap it
+        # in single quotes:
+        # :, {, }, [, ], ,, &, *, #, ?, |, -, <, >, =, !, %, @, \`
+        #
+        # @see http://symfony.com/doc/current/components/yaml/yaml_format.html#strings
+        'registration-email':
+
+            # An example of a CLI worker called via a console command
+            worker:
+                # The key serves as the worker call type.
+                #
+                # Allowed worker call types are
+                # - cli     : A console command
+                # - http    : A HTTP request
+                # - php     : An inline PHP call
+                # - php_cli : A PHP worker wrapped in a console command
+                #
+                # All workers but inline PHP workers allow asynchronous calls.
+                # (See comment at 'job-concurrency' below.)
+                #
+                # The value is the location of the worker. In case of a console
+                # command, it is the command itself.
+                # Console commands are called with the arguments "--body" and
+                # "--metadata".
+                # "--body=" is followed by a JSON-serialized job body.
+                # "--metadata=" is followed by JSON-serialized job metadata
+                #
+                # The exact command for this worker would be:
+                # php console email:send --body=... --metadata=...
+                cli: 'php console email:send'
+
+            # You can override the queue defaults defined above
+            failure_queue: 'unsent-registration-emails'
+            max_job_process_time: 10
+            max_job_lifetime: 3600
+
+        # This is another queue
+        'profile-update':
+
+            # An example of an HTTP worker (a worker called via a HTTP request)
+            # There are two allowed request methods, POST and GET.
+            #
+            # POST requests have the content type set to
+            # application/x-www-form-urlencoded
+            # The job body and metadata are sent in the POST request body
+            # under parameters 'body' and 'metadata' serialized as JSON.
+            #
+            # POST body example: body=...&metadata=...
+            #
+            # GET requests have parameters 'body' and 'metadata' added to the URI,
+            # also serialized as JSON.
+            #
+            # GET URI example: https://example.com/worker?body=...&metadata=...
+            #
+            # If you are using the GET method to send a longer job body over
+            # the network, beware of the target webserver's limitation
+            # regarding the URL length.
+            worker:
+
+                # This is the only required line.
+                http: 'https://example.com/worker?key={api_key}'
+
+                # The request method of the worker HTTP call.
+                #
+                # Allowed values: post, get
+                # Default value: 'post'
+                method: 'post'
+
+                # Optional headers
+                headers:
+                    'Content-Type': 'application/json'
+
+                # More optional parameters. The key is up to you
+                api_key: 'foobar123'
+                another_parameter: 'baz'
+
+        'pic-resize':
+            # An example of a PHP inline worker called directly in the consumer.
+            # It's actually the Consumer process that processes the jobs, so
+            # beware of memory leaks.
+            # Create a WorkerBuilder for each PHP worker and register it during
+            # the Disqontrol bootstrap.
+            worker:
+                php: 'PicResizeWorker'
+
+        'rss-update':
+            # An example of a PHP worker wrapped in a console command
+            # You could just as well write your own console command in PHP,
+            # this is a convenient helper so that it's enough just to write
+            # one class.
+            # This worker processes just one job and exits. Thus there's no
+            # worry about memory leaks.
+            # Create a WorkerBuilder for each PHP-CLI worker and register it
+            # during the Disqontrol bootstrap.
+            worker:
+                php_cli: 'RssUpdateWorker'
+
+    # Default settings for all consumers
+    consumer_defaults:
+        # The minimum (and default) number of processes each consumer will run
+        # Default value: 2
+        min_processes: 2
+
+        # The maximum number of processes each consumer can automatically scale up to
+        # Default value: 5
+        max_processes: 5
+
+        # Scale up the number of consumer processes automatically?
+        # Default value: true
+        autoscale: true
+
+        # The maximum number of jobs processed in one consumer in one batch
+        # Default value: 10
+        #
+        # The consumer will ask Disque for a batch of as many jobs as specified
+        # here and if possible (for workers that allow asynchronous calls, i.e.
+        # HTTP, CLI and PHP-CLI workers) calls all workers in the batch at once.
+        job_batch: 10
+
+    # Define consumers
+    #
+    # This whole section is optional. Each queue that doesn't have its own
+    # consumer defined here will get its own dedicated consumer
+    # with the default values.
+    consumers:
+        # Definition of a multi-queue consumer
+        # A multi-queue consumer will ask for jobs from multiple queues at once.
+        # This can be useful for queues with rare jobs.
+        # Beware of the indentation
+        - queues:
+            - 'registration-email'
+            - 'profile-update'
+          min_processes: 1
+          max_processes: 10
+          job_batch: 5
+
+        # Another consumer, this time only for one queue
+        - queues:
+            - 'pic-resize'
+          min_processes: 1
+          max_processes: 1
+          job_batch: 1
+
+        # Each queue that is not assigned to any consumer in this section will
+        # get its own consumer with the defaults defined in 'consumer-defaults'.
+        # In our example we haven't assigned the last queue, 'rss-update',
+        # to any consumer. Its consumer will spawn 2 processes, can autoscale
+        # to 5 processes and will try to work in batches of 10 jobs at once.
