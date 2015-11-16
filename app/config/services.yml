@@ -1,0 +1,7 @@
+services:
+    disqontrol.command.list_queues:
+        class: Disqontrol\Console\Command\ListQueuesCommand
+        arguments:
+            - %queues%
+        tags:
+            - { name: disqontrol.command }
