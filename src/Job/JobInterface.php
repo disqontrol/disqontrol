@@ -68,6 +68,13 @@ interface JobInterface extends DisquePhpJobInterface
     public function getMetadata($key);
 
     /**
+     * Return all job metadata
+     *
+     * @return array Job metadata
+     */
+    public function getAllMetadata();
+
+    /**
      * Get the job body with metadata
      *
      * The inherited method getBody() returns just the job body, without
