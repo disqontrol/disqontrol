@@ -8,7 +8,7 @@
         "queue",
         "disqontrol"
     ],
-    "homepage": "https://github.com/webtrh/disqontrol",
+    "homepage": "https://github.com/disqontrol/disqontrol",
     "license": "MIT",
     "authors": [
         {
@@ -24,12 +24,12 @@
     "require": {
         "php": ">=5.5.0",
         "mariano/disque-php": "^2.0@alpha",
-        "symfony/config": "^2.7",
-        "symfony/console": "^2.7",
-        "symfony/dependency-injection": "^2.7",
-        "symfony/event-dispatcher": "^2.7",
-        "symfony/process": "^2.7",
-        "symfony/yaml": "^2.7",
+        "symfony/config": "^2.8|^3.0",
+        "symfony/console": "^2.8|^3.0",
+        "symfony/dependency-injection": "^2.8|^3.0",
+        "symfony/event-dispatcher": "^2.8|^3.0",
+        "symfony/process": "^2.8|^3.0",
+        "symfony/yaml": "^2.8|^3.0",
         "mtdowling/cron-expression": "^1.0",
         "psr/log": "^1.0",
         "guzzlehttp/guzzle": "^6.1",
@@ -38,16 +38,11 @@
     },
     "require-dev": {
         "phpunit/phpunit" : "4.*",
-        "scrutinizer/ocular": "~1.1"
+        "scrutinizer/ocular": "~1.2"
     },
     "autoload": {
         "psr-4": {
-            "Webtrh\\Disqontrol\\": "src"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Webtrh\\Disqontrol\\Test\\": "tests"
+            "Disqontrol\\": "src"
         }
     },
     "scripts": {
