@@ -25,13 +25,17 @@ final class Events
 
     /**
      * Before a producer adds a job
-     * Dispatched from Producer
+     * Dispatched from Producer::add()
+     *
+     * @see JobAddBeforeEvent
      */
     const JOB_ADD_BEFORE = 'disqontrol.job.add.before';
 
     /**
      * After a producer adds a job
-     * Dispatched from Producer
+     * Dispatched from Producer::add()
+     *
+     * @see JobAddAfterEvent
      */
     const JOB_ADD_AFTER = 'disqontrol.job.add.after';
 
