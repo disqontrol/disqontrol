@@ -45,6 +45,11 @@
             "Disqontrol\\": "src"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Disqontrol\\Test\\": "tests"
+        }
+    },
     "scripts": {
         "test": "phpunit"
     },
@@ -52,5 +57,6 @@
         "branch-alias": {
             "dev-master": "1.0-dev"
         }
-    }
+    },
+    "bin": ["disqontrol"]
 }

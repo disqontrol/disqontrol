@@ -1,0 +1,208 @@
+#!/usr/bin/env php
+<?php
+
+$disqontrolApplication = new DisqontrolApplication($argv);
+
+/**
+ * Prepare and run whole Disqontrol application.
+ *
+ * 1) load bootstrap
+ * 2) include autoload
+ * 3) create Disqontrol instance
+ * 4) run symfony console application
+ *
+ * @author Martin Patera <mzstic@gmail.com>
+ */
+class DisqontrolApplication
+{
+    const DEFAULT_BOOTSTRAP_PATH = 'bootstrap_disqontrol.php';
+    const VERBOSITY_DEBUG = 3;
+
+    /**
+     * Input arguments of the script
+     * @var array
+     */
+    private $argv;
+
+    /**
+     * @var \Disqontrol\Disqontrol
+     */
+    private $disqontrol;
+
+    /**
+     * @var bool
+     */
+    private $debug;
+
+    /**
+     * Run the whole application
+     *
+     * @param array $argv
+     *
+     * @throws Exception
+     */
+    public function __construct(array $argv)
+    {
+        $this->argv = $argv;
+        $this->disqontrol = $this->loadBootstrap();
+        $this->includeAutoload();
+        if ($this->disqontrol === null) {
+            $this->disqontrol = $this->createDisqontrol();
+        }
+        $this->runApplication();
+    }
+
+    /**
+     * Try to load bootstrap.
+     *
+     * If bootstrap option specified load that file, otherwise
+     * look for default.
+     *
+     * @throws \Disqontrol\Exception\FilesystemException
+     * @throws \Disqontrol\Exception\UnexpectedValueException
+     *
+     * @return null|\Disqontrol\Disqontrol
+     */
+    private function loadBootstrap() {
+        $disqontrol = null;
+        $bootstrapArgIndex = $this->findArgumentIndex('bootstrap');
+        if ($bootstrapArgIndex !== false) {
+            $bootstrapFile = $this->getArgumentValue($bootstrapArgIndex);
+            if (! file_exists($bootstrapFile)) {
+                throw \Disqontrol\Exception\FilesystemException::fileNotFound(
+                    'bootstrap', $bootstrapFile
+                );
+            }
+            $disqontrol = require_once $bootstrapFile;
+            $this->removeArgument($bootstrapArgIndex);
+        } else if (file_exists(self::DEFAULT_BOOTSTRAP_PATH)) {
+            $disqontrol = require_once self::DEFAULT_BOOTSTRAP_PATH;
+        }
+        if (($disqontrol !== null) && (! $disqontrol instanceof \Disqontrol\Disqontrol)) {
+            throw \Disqontrol\Exception\UnexpectedValueException::create(
+                "Bootstrap must return instance of Disqontrol\\Disqontrol or null."
+            );
+        }
+        return $disqontrol;
+    }
+
+    /**
+     * Include autoload, location depends on how Disqontrol has been installed.
+     */
+    private function includeAutoload() {
+        if (file_exists(__DIR__.'/vendor/autoload.php')) {
+            require_once __DIR__.'/vendor/autoload.php';
+        } else if (file_exists(__DIR__.'/../../autoload.php')) {
+            require_once __DIR__.'/../../autoload.php';
+        }
+    }
+
+    /**
+     * Create main Disqontrol class
+     *
+     * @throws Exception
+     *
+     * @return \Disqontrol\Disqontrol
+     */
+    private function createDisqontrol()
+    {
+        $configFile = null;
+        $configFileArgIndex = $this->findArgumentIndex('config');
+        if ($configFileArgIndex !== false) {
+            $configFile = $this->getArgumentValue($configFileArgIndex);
+            $this->removeArgument($configFileArgIndex);
+        }
+        $disqontrol = new \Disqontrol\Disqontrol($configFile, $this->isDebug());
+        return $disqontrol;
+    }
+
+    /**
+     * Prepare and run the application itself
+     *
+     * @throws Exception
+     */
+    private function runApplication() {
+        $application = new Symfony\Component\Console\Application(
+            \Disqontrol\Disqontrol::NAME,
+            \Disqontrol\Disqontrol::VERSION
+        );
+        $container = $this->disqontrol->getContainer();
+        $commandIds = $container->getParameter('disqontrol.commands');
+        foreach ($commandIds as $commandId) {
+            $application->add($container->get($commandId));
+        }
+        $application->run();
+    }
+
+    /**
+     * Is command executed in debug mode?
+     *
+     * Check for --verbose=3 option set or -vvv short option.
+     *
+     * @return bool
+     */
+    private function isDebug()
+    {
+        if ($this->debug !== null) {
+            return $this->debug;
+        }
+        $verbosityArgIndex = $this->findArgumentIndex('verbose');
+        if ($verbosityArgIndex !== false) {
+            $verbosityLevel = $this->getArgumentValue($verbosityArgIndex);
+            $this->debug = $verbosityLevel == self::VERBOSITY_DEBUG;
+        } else {
+            $shortOptionIndex = array_search('-vvv', $this->argv);
+            $this->debug = $shortOptionIndex !== false;
+        }
+        return $this->debug;
+    }
+
+    /**
+     * Find index of specified argument in $argv array
+     *
+     * @param $argumentName
+     * @return bool|int
+     */
+    private function findArgumentIndex($argumentName)
+    {
+        $index = false;
+        $argPrefix = '--'.$argumentName.'=';
+        $argPrefixLength = strlen($argPrefix);
+        foreach ($this->argv as $key => $value) {
+            if (substr($value, 0, $argPrefixLength) == $argPrefix) {
+                $index = $key;
+                break;
+            }
+        }
+        return $index;
+    }
+
+    /**
+     * Get value of argument on specified index
+     *
+     * Arguments are in following format: --argument=value
+     *
+     * @param int $index
+     * @return string
+     */
+    private function getArgumentValue($index)
+    {
+        return substr($this->argv[$index], strpos($this->argv[$index], '=') + 1);
+    }
+
+    /**
+     * Unset argument with index $index
+     *
+     * We need to remove config and bootstrap options from $_SERVER array,
+     * because we don't want symfony application to use them.
+     *
+     * @param int $index
+     */
+    private function removeArgument($index)
+    {
+        if ($index !== false) {
+            unset($this->argv[$index]);
+            unset($_SERVER['argv'][$index]);
+        }
+    }
+}
