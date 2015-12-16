@@ -15,9 +15,12 @@ use Symfony\Component\Config\FileLocator;
 use Symfony\Component\Config\Resource\FileResource;
 use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Dumper\PhpDumper;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
+use Symfony\Component\DependencyInjection\Reference;
+use Symfony\Component\EventDispatcher\DependencyInjection\RegisterListenersPass;
 use Symfony\Component\Yaml\Yaml;
 
 /**
@@ -40,6 +43,10 @@ final class Disqontrol
     const DEFAULT_CONFIG_PATH = 'disqontrol.yml';
     const CONTAINER_CACHE_FILE = 'disqontrol.container.php';
     const SERVICES_FILE = 'services.yml';
+
+    const EVENT_LISTENER_TAG = 'disqontrol.event_listener';
+    const EVENT_SUBSCRIBER_TAG = 'disqontrol.event_subscriber';
+    const EVENT_DISPATCHER_SERVICE = 'event_dispatcher';
 
     /**
      * Client for communication with Disque
@@ -180,13 +187,18 @@ final class Disqontrol
         $container->addObjectResource($this);
         $container->addResource(new FileResource($this->configFile));
 
-
-
         $loader = new YamlFileLoader($container, new FileLocator($this->getConfigDir()));
         $loader->load(self::SERVICES_FILE);
 
         $compilerPass = new DisqontrolCompilerPass();
         $container->addCompilerPass($compilerPass);
+
+        $container->addCompilerPass(new RegisterListenersPass(
+            self::EVENT_DISPATCHER_SERVICE,
+            self::EVENT_LISTENER_TAG,
+            self::EVENT_SUBSCRIBER_TAG
+        ));
+
         return $container;
     }
 
