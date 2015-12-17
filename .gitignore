@@ -1,4 +1,5 @@
-build
-vendor
-app/cache
-app/log
+/build/
+/vendor/
+/app/cache/
+/app/log/
+/disqontrol.yml

@@ -1,11 +1,11 @@
 disqontrol:
     # The log directory
-    # Default value: app/log/disqontrol
-    log_dir: app/log/disqontrol
+    # Default value: app/log
+    log_dir: app/log
 
     # The cache directory
-    # Default value: app/cache/disqontrol
-    cache_dir: app/cache/disqontrol
+    # Default value: app/cache
+    cache_dir: app/cache
 
     # The initial connection to Disque
     # The order of nodes doesn't matter, we connect to a random one
