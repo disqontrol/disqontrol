@@ -1,4 +1,8 @@
 services:
+    event_dispatcher:
+        class: Symfony\Component\EventDispatcher\ContainerAwareEventDispatcher
+        arguments: ['@service_container']
+
     disqontrol.command.list_queues:
         class: Disqontrol\Console\Command\ListQueuesCommand
         arguments:
