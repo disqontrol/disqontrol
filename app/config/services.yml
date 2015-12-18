@@ -9,3 +9,7 @@ services:
             - %queues%
         tags:
             - { name: disqontrol.command }
+
+    logger:
+        class: Monolog\Logger
+        arguments: ['disqontrol']
