@@ -9,6 +9,8 @@ use Disque\Client;
 use Disqontrol\Producer\ProducerInterface;
 use Disqontrol\Consumer\ConsumerInterface;
 use Disque\Connection\Credentials;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 use Symfony\Component\Config\ConfigCache;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Config\FileLocator;
@@ -93,6 +95,8 @@ final class Disqontrol
         $this->debug = $debug;
         $this->processConfig($configFile);
         $this->initializeContainer();
+
+        $this->prepareLogger();
     }
 
     /**
@@ -321,5 +325,15 @@ final class Disqontrol
     {
         $hash = substr(md5($this->configFile), 0, 8);
         return 'Disqontrol'.($this->debug ? 'Debug' : '').'Container_' . $hash;
+    }
+
+    /**
+     * Prepare monolog logger
+     */
+    private function prepareLogger()
+    {
+        $logger = $this->container->get('logger');
+        $streamHandler = new StreamHandler($this->config->getLogDir().'/disqontrol.log', Logger::DEBUG);
+        $logger->pushHandler($streamHandler);
     }
 }
