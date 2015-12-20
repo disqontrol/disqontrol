@@ -20,3 +20,14 @@ services:
         class: Monolog\Logger
         arguments:
             - 'disqontrol'
+
+    disque_client_factory:
+        class: Disqontrol\DisqueClientFactory
+        arguments:
+            - '@configuration'
+
+    disque:
+        class: Disque\Client
+        factory:
+            - '@disque_client_factory'
+            - getClient

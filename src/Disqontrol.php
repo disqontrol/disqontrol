@@ -17,7 +17,6 @@ use Disqontrol\Exception\FilesystemException;
 use Disque\Client;
 use Disqontrol\Producer\ProducerInterface;
 use Disqontrol\Consumer\ConsumerInterface;
-use Disque\Connection\Credentials;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Symfony\Component\Config\ConfigCache;
@@ -50,8 +49,8 @@ final class Disqontrol
     /**
      * The application name and version
      */
-    const VERSION = '0.0.1-alpha';
     const NAME = 'Disqontrol';
+    const VERSION = '0.0.1-alpha';
 
     /**
      * Default paths
@@ -73,13 +72,6 @@ final class Disqontrol
     const EVENT_LISTENER_TAG = 'disqontrol.event_listener';
     const EVENT_SUBSCRIBER_TAG = 'disqontrol.event_subscriber';
     const EVENT_DISPATCHER_SERVICE = 'event_dispatcher';
-
-    /**
-     * Client for communication with Disque
-     *
-     * @var Client
-     */
-    private $disque;
 
     /**
      * Is Disqontrol running in debug mode?
@@ -140,11 +132,7 @@ final class Disqontrol
      */
     public function getDisque()
     {
-        if ($this->disque === null) {
-            $this->createDisqueClient();
-        }
-
-        return $this->disque;
+        return $this->container->get('disque');
     }
 
     /**
@@ -254,42 +242,6 @@ final class Disqontrol
         return new ContainerBuilder(
             new ParameterBag([self::CONTAINER_CONFIG_KEY => $this->configParams])
         );
-    }
-
-    /**
-     * Create Disque client
-     *
-     * This action is performed only once, when Disque is required for the first time.
-     */
-    private function createDisqueClient()
-    {
-        if ($this->disque !== null) {
-            return;
-        }
-        $credentials = $this->getCredentials();
-        $this->disque = new Client($credentials);
-    }
-
-    /**
-     * Create credentials for Disque connection
-     *
-     * @return Credentials[]
-     */
-    private function getCredentials()
-    {
-        $disqueConfig = $this->config->getDisqueConfig();
-        $result = [];
-        foreach ($disqueConfig as $credentialsConfig) {
-            $result[] = new Credentials(
-                $credentialsConfig[ConfigDefinition::HOST],
-                $credentialsConfig[ConfigDefinition::PORT],
-                $credentialsConfig[ConfigDefinition::PASSWORD],
-                $credentialsConfig[ConfigDefinition::CONNECTION_TIMEOUT],
-                $credentialsConfig[ConfigDefinition::RESPONSE_TIMEOUT]
-            );
-        }
-
-        return $result;
     }
 
     /**
