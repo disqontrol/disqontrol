@@ -1,6 +1,7 @@
 <?php
 namespace Disqontrol\Console\Command;
 
+use Disqontrol\Configuration\DisqontrolConfiguration;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -20,13 +21,12 @@ class ListQueuesCommand extends Command
     protected $queues;
 
     /**
-     * @param array $queues
+     * @param DisqontrolConfiguration $config
      */
-    public function __construct(
-        array $queues
-    ) {
+    public function __construct(DisqontrolConfiguration $config)
+    {
         parent::__construct();
-        $this->queues = $queues;
+        $this->queues = $config->getQueuesConfig();
     }
 
     /**

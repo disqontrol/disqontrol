@@ -22,7 +22,7 @@ class DisqontrolConfiguration
      */
     public function __construct(array $configArray)
     {
-        $this->config = $configArray['disqontrol'];
+        $this->config = $configArray;
         $this->setQueueDefaults();
         $this->setConsumerDefaults();
     }

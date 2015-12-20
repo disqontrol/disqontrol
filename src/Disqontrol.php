@@ -1,7 +1,6 @@
 <?php
 namespace Disqontrol;
 
-use Disqontrol\Configuration\DisqontrolConfiguration;
 use Disqontrol\Configuration\DisqontrolConfigurationDefinition as ConfigDefinition;
 use Disqontrol\Exception\ConfigurationException;
 use Disqontrol\Exception\FilesystemException;
@@ -17,11 +16,9 @@ use Symfony\Component\Config\FileLocator;
 use Symfony\Component\Config\Resource\FileResource;
 use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Dumper\PhpDumper;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
-use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\EventDispatcher\DependencyInjection\RegisterListenersPass;
 use Symfony\Component\Yaml\Yaml;
 
@@ -39,13 +36,28 @@ use Symfony\Component\Yaml\Yaml;
  */
 final class Disqontrol
 {
+    /**
+     * The application name and version
+     */
     const VERSION = '0.0.1-alpha';
     const NAME = 'Disqontrol';
 
+    /**
+     * Default paths
+     */
     const DEFAULT_CONFIG_PATH = 'disqontrol.yml';
     const CONTAINER_CACHE_FILE = 'disqontrol.container.php';
     const SERVICES_FILE = 'services.yml';
+    const APP_CONFIG_DIR_PATH = '/../app/config';
 
+    /**
+     * A key for the configuration parameters in the service container
+     */
+    const CONTAINER_CONFIG_KEY = 'configuration';
+
+    /**
+     * Service ID and tags for the service container
+     */
     const EVENT_LISTENER_TAG = 'disqontrol.event_listener';
     const EVENT_SUBSCRIBER_TAG = 'disqontrol.event_subscriber';
     const EVENT_DISPATCHER_SERVICE = 'event_dispatcher';
@@ -56,13 +68,6 @@ final class Disqontrol
      * @var Client
      */
     private $disque;
-
-    /**
-     * Configuration of Disqontrol
-     *
-     * @var DisqontrolConfiguration
-     */
-    private $config;
 
     /**
      * Is Disqontrol running in debug mode?
@@ -80,6 +85,11 @@ final class Disqontrol
      * @var string Configuration file
      */
     private $configFile;
+
+    /**
+     * @var array Array of configuration parameters
+     */
+    private $configParams;
 
     /**
      * If no config file is specified, default config is used instead.
@@ -157,7 +167,7 @@ final class Disqontrol
     private function initializeContainer()
     {
         $class = $this->getContainerClass();
-        $cache = new ConfigCache($this->config->getCacheDir().'/'.$class.'.php', $this->debug);
+        $cache = new ConfigCache($this->getCacheDir().'/'.$class.'.php', $this->debug);
         if (!$cache->isFresh()) {
             $container = $this->buildContainer();
             $container->compile();
@@ -177,7 +187,7 @@ final class Disqontrol
      */
     private function buildContainer()
     {
-        foreach (['cache' => $this->config->getCacheDir(), 'logs' => $this->config->getLogDir()] as $name => $dir) {
+        foreach (['cache' => $this->getCacheDir(), 'logs' => $this->getLogDir()] as $name => $dir) {
             if (!is_dir($dir)) {
                 if (false === @mkdir($dir, 0777, true) && !is_dir($dir)) {
                     throw FilesystemException::cantCreateDirectory($dir, $name);
@@ -228,18 +238,8 @@ final class Disqontrol
     private function getContainerBuilder()
     {
         return new ContainerBuilder(
-            new ParameterBag($this->config->getWholeConfig())
+            new ParameterBag([self::CONTAINER_CONFIG_KEY => $this->configParams])
         );
-    }
-
-    /**
-     * Get the config directory path
-     *
-     * @return string
-     */
-    private function getConfigDir()
-    {
-        return realpath(__DIR__.'/../app/config');
     }
 
     /**
@@ -286,11 +286,12 @@ final class Disqontrol
     {
         $config = $this->loadConfigFile($configFile);
         $processor = new Processor();
-        $processedConfig = $processor->processConfiguration(
+        $processedParams = $processor->processConfiguration(
             new ConfigDefinition(),
             [$config]
         );
-        $this->config = new DisqontrolConfiguration($processedConfig);
+
+        $this->configParams = $processedParams['disqontrol'];
     }
 
     /**
@@ -310,6 +311,9 @@ final class Disqontrol
         if (!file_exists($configFile)) {
             throw ConfigurationException::configFileNotFound($configFile);
         }
+
+        $this->configFile = $configFile;
+
         return Yaml::parse(file_get_contents($configFile));
     }
 
@@ -323,7 +327,8 @@ final class Disqontrol
      */
     private function getContainerClass()
     {
-        $hash = substr(md5($this->configFile), 0, 8);
+        $hashInput = $this->configFile . self::VERSION;
+        $hash = substr(md5($hashInput), 0, 8);
         return 'Disqontrol'.($this->debug ? 'Debug' : '').'Container_' . $hash;
     }
 
@@ -333,7 +338,44 @@ final class Disqontrol
     private function prepareLogger()
     {
         $logger = $this->container->get('logger');
-        $streamHandler = new StreamHandler($this->config->getLogDir().'/disqontrol.log', Logger::DEBUG);
+        $streamHandler = new StreamHandler($this->getLogDir().'/disqontrol.log', Logger::DEBUG);
         $logger->pushHandler($streamHandler);
     }
+
+    /**
+     * Get the config directory path
+     *
+     * @return string
+     */
+    private function getConfigDir()
+    {
+        return realpath(__DIR__ . self::APP_CONFIG_DIR_PATH);
+    }
+
+    /**
+     * Get the cache directory path from the configuration parameters
+     *
+     * We need this parameter before the configuration object is created,
+     * otherwise we would ask it.
+     *
+     * @return string
+     */
+    private function getCacheDir()
+    {
+        return $this->configParams[ConfigDefinition::CACHE_DIR];
+    }
+
+    /**
+     * Get the log directory ppath from the configuration parameters
+     *
+     * We need this parameter before the configuration object is created,
+     * otherwise we would ask it.
+     *
+     * @return string
+     */
+    private function getLogDir()
+    {
+        return $this->configParams[ConfigDefinition::LOG_DIR];
+    }
+
 }
