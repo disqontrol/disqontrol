@@ -11,6 +11,7 @@
 namespace Disqontrol;
 
 use Disqontrol\Configuration\DisqontrolConfigurationDefinition as ConfigDefinition;
+use Disqontrol\Configuration\ConsoleCommandsCompilerPass;
 use Disqontrol\Exception\ConfigurationException;
 use Disqontrol\Exception\FilesystemException;
 use Disque\Client;
@@ -61,9 +62,10 @@ final class Disqontrol
     const APP_CONFIG_DIR_PATH = '/../app/config';
 
     /**
-     * A key for the configuration parameters in the service container
+     * Keys for the service container parameters
      */
     const CONTAINER_CONFIG_KEY = 'configuration';
+    const CONTAINER_COMMANDS_KEY = 'disqontrol.commands';
 
     /**
      * Service ID and tags for the service container
@@ -217,8 +219,7 @@ final class Disqontrol
         $loader = new YamlFileLoader($container, new FileLocator($this->getConfigDir()));
         $loader->load(self::SERVICES_FILE);
 
-        $compilerPass = new DisqontrolCompilerPass();
-        $container->addCompilerPass($compilerPass);
+        $container->addCompilerPass(new ConsoleCommandsCompilerPass());
 
         $container->addCompilerPass(new RegisterListenersPass(
             self::EVENT_DISPATCHER_SERVICE,

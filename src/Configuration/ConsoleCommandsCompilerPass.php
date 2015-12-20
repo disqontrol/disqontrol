@@ -8,17 +8,19 @@
  * file that was distributed with this source code.
  */
 
-namespace Disqontrol;
+namespace Disqontrol\Configuration;
 
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Disqontrol\Disqontrol;
 
 /**
- * Class DisqontrolExtension
+ * Add console commands to the container parameter "disqontrol.commands"
  *
  * @author Martin Patera <mzstic@gmail.com>
+ * @author Martin Schlemmer
  */
-class DisqontrolCompilerPass implements CompilerPassInterface
+class ConsoleCommandsCompilerPass implements CompilerPassInterface
 {
     /**
      * @inheritdoc
@@ -26,6 +28,9 @@ class DisqontrolCompilerPass implements CompilerPassInterface
     public function process(ContainerBuilder $container)
     {
         $commandIds = $container->findTaggedServiceIds('disqontrol.command');
-        $container->setParameter('disqontrol.commands', array_keys($commandIds));
+        $container->setParameter(
+            Disqontrol::CONTAINER_COMMANDS_KEY,
+            array_keys($commandIds)
+        );
     }
 }
