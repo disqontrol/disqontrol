@@ -1,4 +1,13 @@
 <?php
+/*
+ * This file is part of the Disqontrol package.
+ *
+ * (c) Webtrh s.r.o. <info@webtrh.cz>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Disqontrol;
 
 use Disqontrol\Configuration\DisqontrolConfigurationDefinition as ConfigDefinition;
@@ -33,6 +42,7 @@ use Symfony\Component\Yaml\Yaml;
  * caching, building etc.
  *
  * @author Martin Patera <mzstic@gmail.com>
+ * @author Martin Schlemmer
  */
 final class Disqontrol
 {
@@ -93,15 +103,17 @@ final class Disqontrol
 
     /**
      * If no config file is specified, default config is used instead.
+     *
      * @see self::DEFAULT_CONFIG_PATH
      *
      * @param string $configFile
-     * @param bool $debug
+     * @param bool   $debug
      */
     public function __construct(
         $configFile = null,
         $debug = false
-    ) {
+    )
+    {
         $this->debug = $debug;
         $this->processConfig($configFile);
         $this->initializeContainer();
@@ -129,6 +141,7 @@ final class Disqontrol
         if ($this->disque === null) {
             $this->createDisqueClient();
         }
+
         return $this->disque;
     }
 
@@ -158,7 +171,7 @@ final class Disqontrol
         // @TODO implement.
     }
 
-     /**
+    /**
      * Initialize the service container
      *
      * The cached version of the service container is used when fresh, otherwise the
@@ -167,8 +180,8 @@ final class Disqontrol
     private function initializeContainer()
     {
         $class = $this->getContainerClass();
-        $cache = new ConfigCache($this->getCacheDir().'/'.$class.'.php', $this->debug);
-        if (!$cache->isFresh()) {
+        $cache = new ConfigCache($this->getCacheDir() . '/' . $class . '.php', $this->debug);
+        if ( ! $cache->isFresh()) {
             $container = $this->buildContainer();
             $container->compile();
             $this->dumpContainer($cache, $container, $class);
@@ -188,11 +201,11 @@ final class Disqontrol
     private function buildContainer()
     {
         foreach (['cache' => $this->getCacheDir(), 'logs' => $this->getLogDir()] as $name => $dir) {
-            if (!is_dir($dir)) {
-                if (false === @mkdir($dir, 0777, true) && !is_dir($dir)) {
+            if ( ! is_dir($dir)) {
+                if (false === @mkdir($dir, 0777, true) && ! is_dir($dir)) {
                     throw FilesystemException::cantCreateDirectory($dir, $name);
                 }
-            } elseif (!is_writable($dir)) {
+            } elseif ( ! is_writable($dir)) {
                 throw FilesystemException::cantWriteDirectory($dir, $name);
             }
         }
@@ -274,6 +287,7 @@ final class Disqontrol
                 $credentialsConfig[ConfigDefinition::RESPONSE_TIMEOUT]
             );
         }
+
         return $result;
     }
 
@@ -300,6 +314,7 @@ final class Disqontrol
      * Look for specified file or use default.
      *
      * @param string|null $configFile
+     *
      * @return array
      * @throws ConfigurationException
      */
@@ -308,7 +323,7 @@ final class Disqontrol
         if (empty($configFile)) {
             $configFile = self::DEFAULT_CONFIG_PATH;
         }
-        if (!file_exists($configFile)) {
+        if ( ! file_exists($configFile)) {
             throw ConfigurationException::configFileNotFound($configFile);
         }
 
@@ -329,7 +344,8 @@ final class Disqontrol
     {
         $hashInput = $this->configFile . self::VERSION;
         $hash = substr(md5($hashInput), 0, 8);
-        return 'Disqontrol'.($this->debug ? 'Debug' : '').'Container_' . $hash;
+
+        return 'Disqontrol' . ($this->debug ? 'Debug' : '') . 'Container_' . $hash;
     }
 
     /**
@@ -338,7 +354,7 @@ final class Disqontrol
     private function prepareLogger()
     {
         $logger = $this->container->get('logger');
-        $streamHandler = new StreamHandler($this->getLogDir().'/disqontrol.log', Logger::DEBUG);
+        $streamHandler = new StreamHandler($this->getLogDir() . '/disqontrol.log', Logger::DEBUG);
         $logger->pushHandler($streamHandler);
     }
 
