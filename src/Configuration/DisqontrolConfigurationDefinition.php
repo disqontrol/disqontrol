@@ -52,8 +52,8 @@ class DisqontrolConfigurationDefinition implements ConfigurationInterface
     const WORKER = 'worker';
 
     /** Default values */
-    const LOG_DIR_DEFAULT = 'app/log';
-    const CACHE_DIR_DEFAULT = 'app/cache';
+    const LOG_DIR_DEFAULT = 'var/log';
+    const CACHE_DIR_DEFAULT = 'var/cache/disqontrol';
     const MAX_JOB_PROCESS_TIME_DEFAULT = 600;
     const MAX_JOB_LIFETIME_DEFAULT = 172800;
     const MIN_PROCESSES_DEFAULT = 2;
