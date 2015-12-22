@@ -123,7 +123,7 @@ class DisqontrolConfiguration
      *
      * @param string $queue
      *
-     * @return int Max job process time
+     * @return int Max job process time in seconds
      */
     public function getMaxJobProcessTime($queue)
     {
@@ -139,7 +139,7 @@ class DisqontrolConfiguration
      *
      * @param string $queue
      *
-     * @return int Max job lifetime
+     * @return int Max job lifetime in seconds
      */
     public function getMaxJobLifetime($queue)
     {
