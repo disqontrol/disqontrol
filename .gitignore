@@ -2,4 +2,6 @@
 /vendor/
 /app/cache/
 /app/log/
+/var/cache/
+/var/log/
 /disqontrol.yml

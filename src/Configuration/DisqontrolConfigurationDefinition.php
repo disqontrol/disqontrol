@@ -1,4 +1,13 @@
 <?php
+/*
+ * This file is part of the Disqontrol package.
+ *
+ * (c) Webtrh s.r.o. <info@webtrh.cz>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Disqontrol\Configuration;
 
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
@@ -43,8 +52,8 @@ class DisqontrolConfigurationDefinition implements ConfigurationInterface
     const WORKER = 'worker';
 
     /** Default values */
-    const LOG_DIR_DEFAULT = 'app/log/disqontrol';
-    const CACHE_DIR_DEFAULT = 'app/cache/disqontrol';
+    const LOG_DIR_DEFAULT = 'var/log';
+    const CACHE_DIR_DEFAULT = 'var/cache/disqontrol';
     const MAX_JOB_PROCESS_TIME_DEFAULT = 600;
     const MAX_JOB_LIFETIME_DEFAULT = 172800;
     const MIN_PROCESSES_DEFAULT = 2;
@@ -253,6 +262,4 @@ class DisqontrolConfigurationDefinition implements ConfigurationInterface
 
         return $node;
     }
-
-
 }

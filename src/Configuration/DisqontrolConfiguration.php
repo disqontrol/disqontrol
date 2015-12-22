@@ -1,4 +1,13 @@
 <?php
+/*
+ * This file is part of the Disqontrol package.
+ *
+ * (c) Webtrh s.r.o. <info@webtrh.cz>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Disqontrol\Configuration;
 
 use Disqontrol\Configuration\DisqontrolConfigurationDefinition as Config;
@@ -22,7 +31,7 @@ class DisqontrolConfiguration
      */
     public function __construct(array $configArray)
     {
-        $this->config = $configArray['disqontrol'];
+        $this->config = $configArray;
         $this->setQueueDefaults();
         $this->setConsumerDefaults();
     }
@@ -127,7 +136,7 @@ class DisqontrolConfiguration
      * Set default values to the specified config group, unless set manually.
      *
      * @param string $configGroup
-     * @param array $defaults
+     * @param array  $defaults
      */
     private function setDefaults($configGroup, array $defaults)
     {

@@ -1,15 +1,33 @@
 services:
+    configuration:
+        class: Disqontrol\Configuration\DisqontrolConfiguration
+        arguments:
+            - %configuration%
+
     event_dispatcher:
         class: Symfony\Component\EventDispatcher\ContainerAwareEventDispatcher
-        arguments: ['@service_container']
+        arguments:
+            - '@service_container'
 
     disqontrol.command.list_queues:
         class: Disqontrol\Console\Command\ListQueuesCommand
         arguments:
-            - %queues%
+            - '@configuration'
         tags:
             - { name: disqontrol.command }
 
     logger:
         class: Monolog\Logger
-        arguments: ['disqontrol']
+        arguments:
+            - 'disqontrol'
+
+    disque_client_factory:
+        class: Disqontrol\DisqueClientFactory
+        arguments:
+            - '@configuration'
+
+    disque:
+        class: Disque\Client
+        factory:
+            - '@disque_client_factory'
+            - getClient

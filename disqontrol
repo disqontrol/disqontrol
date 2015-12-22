@@ -127,7 +127,9 @@ class DisqontrolApplication
             \Disqontrol\Disqontrol::VERSION
         );
         $container = $this->disqontrol->getContainer();
-        $commandIds = $container->getParameter('disqontrol.commands');
+        $commandIds = $container->getParameter(
+            \Disqontrol\Disqontrol::CONTAINER_COMMANDS_KEY
+        );
         foreach ($commandIds as $commandId) {
             $application->add($container->get($commandId));
         }

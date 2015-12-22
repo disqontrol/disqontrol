@@ -1,6 +1,16 @@
 <?php
+/*
+ * This file is part of the Disqontrol package.
+ *
+ * (c) Webtrh s.r.o. <info@webtrh.cz>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Disqontrol\Console\Command;
 
+use Disqontrol\Configuration\DisqontrolConfiguration;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -20,13 +30,12 @@ class ListQueuesCommand extends Command
     protected $queues;
 
     /**
-     * @param array $queues
+     * @param DisqontrolConfiguration $config
      */
-    public function __construct(
-        array $queues
-    ) {
+    public function __construct(DisqontrolConfiguration $config)
+    {
         parent::__construct();
-        $this->queues = $queues;
+        $this->queues = $config->getQueuesConfig();
     }
 
     /**
