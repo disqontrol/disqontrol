@@ -16,6 +16,7 @@ use Disqontrol\Configuration\DisqontrolConfigurationDefinition as Config;
  * The Disqontrol configuration wrapped in an object
  *
  * @author Martin Patera <mzstic@gmail.com>
+ * @author Martin Schlemmer
  */
 class DisqontrolConfiguration
 {
@@ -114,6 +115,40 @@ class DisqontrolConfiguration
     public function getConsumerDefaults()
     {
         return $this->config[Config::CONSUMER_DEFAULTS];
+    }
+
+
+    /**
+     * Get max job process time from the configuration for the given queue
+     *
+     * @param string $queue
+     *
+     * @return int Max job process time in seconds
+     */
+    public function getMaxJobProcessTime($queue)
+    {
+        $maxJobProcessTime = isset($this->config[Config::QUEUES][$queue][Config::MAX_JOB_PROCESS_TIME])
+            ? $this->config[Config::QUEUES][$queue][Config::MAX_JOB_PROCESS_TIME]
+            : $this->config[Config::QUEUE_DEFAULTS][Config::MAX_JOB_PROCESS_TIME];
+
+        return $maxJobProcessTime;
+    }
+
+    /**
+     * Get max job lifetime from the configuration for the given queue
+     *
+     * @param string $queue
+     *
+     * @return int Max job lifetime in seconds
+     */
+    public function getMaxJobLifetime($queue)
+    {
+        $maxJobProcessTime = isset($this->config[Config::QUEUES][$queue][Config::MAX_JOB_LIFETIME])
+            ? $this->config[Config::QUEUES][$queue][Config::MAX_JOB_LIFETIME]
+            : $this->config[Config::QUEUE_DEFAULTS][Config::MAX_JOB_LIFETIME];
+
+        return $maxJobProcessTime;
+
     }
 
     /**
