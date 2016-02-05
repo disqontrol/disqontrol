@@ -7,21 +7,24 @@
 [![Quality Score][ico-code-quality]][link-code-quality]
 [![Total Downloads][ico-downloads]][link-downloads]
 
-A PHP library for running robust job queues in [Disque](https://github.com/antirez/disque).
+A user-friendly framework for running background jobs in any language.
 
-With Disqontrol you get the following out of the box:
+Disqontrol is written in PHP and uses [Disque](https://github.com/antirez/disque) as the job queue.
 
-- Job metadata (track anything)
-- Repeated jobs
-- Language agnostic workers 
-- Failure handling and logging
-- Configurable asynchronous worker calls
-- Synchronous mode for debugging (process new jobs immediately)
-- Automatic switching to the best Disque node
+With Disqontrol you get the following features:
+
+- Run multiple jobs in parallel
+- Process jobs in any programming language
+- Run certain jobs regularly
+- Handle failures robustly and log as much as you need
+- Switch automatically to the best Disque node
+- Use synchronous mode for debugging (process new jobs immediately)
 
 Workers can be called via a console command or a HTTP request and can therefore
 be written in other languages than PHP. The library also provides convenient
-wrappers for workers written in PHP to do the heavy lifting for you.
+wrappers for workers written in PHP.
+
+The goal of Disqontrol is to be a user-friendly, clean and robust tool.
 
 We follow semantic versioning.
 
