@@ -10,7 +10,7 @@
 
 namespace Disqontrol\Configuration;
 
-use Disqontrol\Configuration\DisqontrolConfigurationDefinition as Config;
+use Disqontrol\Configuration\ConfigDefinition as Config;
 
 /**
  * The Disqontrol configuration wrapped in an object
@@ -18,7 +18,7 @@ use Disqontrol\Configuration\DisqontrolConfigurationDefinition as Config;
  * @author Martin Patera <mzstic@gmail.com>
  * @author Martin Schlemmer
  */
-class DisqontrolConfiguration
+class Configuration
 {
     /**
      * Configuration array

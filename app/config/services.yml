@@ -1,6 +1,6 @@
 services:
     configuration:
-        class: Disqontrol\Configuration\DisqontrolConfiguration
+        class: Disqontrol\Configuration\Configuration
         arguments:
             - %configuration%
 

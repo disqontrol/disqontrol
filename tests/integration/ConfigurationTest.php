@@ -10,8 +10,8 @@
 namespace Disqontrol\Test\Integration;
 
 use Symfony\Component\Config\Definition\Processor;
-use Disqontrol\Configuration\DisqontrolConfigurationDefinition as Config;
-use Disqontrol\Configuration\DisqontrolConfiguration;
+use Disqontrol\Configuration\ConfigDefinition as Config;
+use Disqontrol\Configuration\Configuration;
 use Symfony\Component\Yaml\Yaml;
 
 /**
@@ -54,7 +54,7 @@ class ConfigurationTest extends \PHPUnit_Framework_TestCase
         $configParams = $this->configParams;
         $this->assertTrue(is_array($configParams) and ! empty($configParams));
 
-        $disqontrolConfig = new DisqontrolConfiguration($configParams);
+        $disqontrolConfig = new Configuration($configParams);
         $this->assertArraySubset($configParams, $disqontrolConfig->getWholeConfig());
     }
 
@@ -66,7 +66,7 @@ class ConfigurationTest extends \PHPUnit_Framework_TestCase
         $configParams = $this->configParams;
         $configParams[Config::LOG_DIR] = self::TEST_LOG_PATH;
 
-        $disqontrolConfig = new DisqontrolConfiguration($configParams);
+        $disqontrolConfig = new Configuration($configParams);
         $this->assertSame($disqontrolConfig->getLogDir(), self::TEST_LOG_PATH);
     }
 
@@ -84,7 +84,7 @@ class ConfigurationTest extends \PHPUnit_Framework_TestCase
         $configParams[Config::QUEUE_DEFAULTS][Config::MAX_JOB_LIFETIME]
             = self::TEST_JOB_LIFETIME;
 
-        $disqontrolConfig = new DisqontrolConfiguration($configParams);
+        $disqontrolConfig = new Configuration($configParams);
 
         // Now check if the fallback parameter was added correctly to the queue
         $queueConfig = $disqontrolConfig->getQueuesConfig()[$queue];

@@ -22,7 +22,7 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
  *
  * @author Martin Patera <mzstic@gmail.com>
  */
-class DisqontrolConfigurationDefinition implements ConfigurationInterface
+class ConfigDefinition implements ConfigurationInterface
 {
     const DISQONTROL = 'disqontrol';
     const LOG_DIR = 'log_dir';
