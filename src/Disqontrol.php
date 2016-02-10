@@ -10,7 +10,7 @@
 
 namespace Disqontrol;
 
-use Disqontrol\Configuration\DisqontrolConfigurationDefinition as ConfigDefinition;
+use Disqontrol\Configuration\ConfigDefinition;
 use Disqontrol\Configuration\ConsoleCommandsCompilerPass;
 use Disqontrol\Exception\ConfigurationException;
 use Disqontrol\Exception\FilesystemException;

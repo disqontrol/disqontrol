@@ -10,8 +10,8 @@
 
 namespace Disqontrol;
 
-use Disqontrol\Configuration\DisqontrolConfiguration;
-use Disqontrol\Configuration\DisqontrolConfigurationDefinition as ConfigDefinition;
+use Disqontrol\Configuration\Configuration;
+use Disqontrol\Configuration\ConfigDefinition;
 use Disque\Connection\Credentials;
 use Disque\Client;
 
@@ -23,7 +23,7 @@ use Disque\Client;
 class DisqueClientFactory
 {
     /**
-     * @var DisqontrolConfiguration
+     * @var Configuration
      */
     private $config;
 
@@ -33,9 +33,9 @@ class DisqueClientFactory
     private $disque;
 
     /**
-     * @param DisqontrolConfiguration $config
+     * @param Configuration $config
      */
-    public function __construct(DisqontrolConfiguration $config)
+    public function __construct(Configuration $config)
     {
         $this->config = $config;
     }
