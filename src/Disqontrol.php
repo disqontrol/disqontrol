@@ -146,7 +146,8 @@ final class Disqontrol
      */
     public function getProducer($synchronousMode = false)
     {
-        // @TODO implement.
+        // TODO Implement a synchronous producer
+        return $this->container->get('producer');
     }
 
     /**

@@ -31,3 +31,21 @@ services:
         factory:
             - '@disque_client_factory'
             - getClient
+
+    job_factory:
+        class: Disqontrol\Job\JobFactory
+
+    job_marshaller:
+        class: Disqontrol\Job\Marshaller\JobMarshaller
+        arguments:
+            - '@job_factory'
+
+    producer:
+        class: Disqontrol\Producer\Producer
+        arguments:
+            - '@disque'
+            - '@job_marshaller'
+            - '@configuration'
+            - '@logger'
+            - '@event_dispatcher'
+

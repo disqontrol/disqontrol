@@ -59,7 +59,7 @@ class DisqontrolApplication
      * look for default.
      *
      * @throws \Disqontrol\Exception\FilesystemException
-     * @throws \Disqontrol\Exception\UnexpectedValueException
+     * @throws UnexpectedValueException
      *
      * @return null|\Disqontrol\Disqontrol
      */
@@ -79,7 +79,7 @@ class DisqontrolApplication
             $disqontrol = require_once self::DEFAULT_BOOTSTRAP_PATH;
         }
         if (($disqontrol !== null) && (! $disqontrol instanceof \Disqontrol\Disqontrol)) {
-            throw \Disqontrol\Exception\UnexpectedValueException::create(
+            throw new UnexpectedValueException(
                 "Bootstrap must return instance of Disqontrol\\Disqontrol or null."
             );
         }
