@@ -37,23 +37,29 @@ class JobAddBeforeEvent extends Event
     /**
      * @var int Maximum job process time in seconds
      */
-    protected $maxJobProcessTime;
+    protected $jobProcessTimeout;
 
     /**
      * @var int Maximum job lifetime in seconds
      */
-    protected $maxJobLifetime;
+    protected $jobLifetime;
 
+    /**
+     * @param JobInterface $job
+     * @param int          $delay
+     * @param int          $jobProcessTimeout
+     * @param int          $jobLifetime
+     */
     public function __construct(
         JobInterface $job,
         $delay,
-        $maxJobProcessTime,
-        $maxJobLifetime
+        $jobProcessTimeout,
+        $jobLifetime
     ) {
         $this->job = $job;
         $this->setDelay($delay);
-        $this->setMaxJobProcessTime($maxJobProcessTime);
-        $this->setMaxJobLifetime($maxJobLifetime);
+        $this->setJobProcessTimeout($jobProcessTimeout);
+        $this->setJobLifetime($jobLifetime);
     }
 
     /**
@@ -91,19 +97,19 @@ class JobAddBeforeEvent extends Event
      *
      * @return int
      */
-    public function getMaxJobProcessTime()
+    public function getJobProcessTimeout()
     {
-        return $this->maxJobProcessTime;
+        return $this->jobProcessTimeout;
     }
 
     /**
      * Set the job max process time
      *
-     * @param int $maxJobProcessTime
+     * @param int $jobProcessTimeout
      */
-    public function setMaxJobProcessTime($maxJobProcessTime)
+    public function setJobProcessTimeout($jobProcessTimeout)
     {
-        $this->maxJobProcessTime = (int) $maxJobProcessTime;
+        $this->jobProcessTimeout = (int) $jobProcessTimeout;
     }
 
     /**
@@ -111,18 +117,18 @@ class JobAddBeforeEvent extends Event
      *
      * @return int
      */
-    public function getMaxJobLifetime()
+    public function getJobLifetime()
     {
-        return $this->maxJobLifetime;
+        return $this->jobLifetime;
     }
 
     /**
      * Set the job max lifetime
      *
-     * @param int $maxJobLifetime
+     * @param int $jobLifetime
      */
-    public function setMaxJobLifetime($maxJobLifetime)
+    public function setJobLifetime($jobLifetime)
     {
-        $this->maxJobLifetime = (int) $maxJobLifetime;
+        $this->jobLifetime = (int) $jobLifetime;
     }
 }

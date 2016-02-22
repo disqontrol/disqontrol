@@ -33,8 +33,8 @@ class Producer implements ProducerInterface
      * @var string Constants for the disque-php method Client::AddJob()
      */
     const DISQUE_ADDJOB_DELAY = 'delay';
-    const DISQUE_ADDJOB_MAX_JOB_PROCESS_TIME = 'retry';
-    const DISQUE_ADDJOB_MAX_JOB_LIFETIME = 'ttl';
+    const DISQUE_ADDJOB_JOB_PROCESS_TIMEOUT = 'retry';
+    const DISQUE_ADDJOB_JOB_LIFETIME = 'ttl';
 
     /**
      * @var Client A client for communicating with Disque
@@ -89,15 +89,15 @@ class Producer implements ProducerInterface
     public function add(JobInterface $job, $delay = 0)
     {
         $queue = $job->getQueue();
-        $maxJobProcessTime = $this->config->getMaxJobProcessTime($queue);
-        $maxJobLifetime = $this->config->getMaxJobLifetime($queue);
+        $jobProcessTimeout = $this->config->getJobProcessTimeout($queue);
+        $jobLifetime = $this->config->getJobLifetime($queue);
 
         // Dispatch a pre-add event
         $preAddEvent = new JobAddBeforeEvent(
             $job,
             $delay,
-            $maxJobProcessTime,
-            $maxJobLifetime
+            $jobProcessTimeout,
+            $jobLifetime
         );
         $this->eventDispatcher->dispatch(Events::JOB_ADD_BEFORE, $preAddEvent);
 
@@ -106,8 +106,8 @@ class Producer implements ProducerInterface
         $jobId = $this->doAdd(
             $job,
             $preAddEvent->getDelay(),
-            $preAddEvent->getMaxJobProcessTime(),
-            $preAddEvent->getMaxJobLifetime()
+            $preAddEvent->getJobProcessTimeout(),
+            $preAddEvent->getJobLifetime()
         );
 
         if ($jobId !== false) {
@@ -129,22 +129,22 @@ class Producer implements ProducerInterface
      *
      * @param JobInterface $job               The job to add
      * @param int          $delay             Job delay in seconds
-     * @param int          $maxJobProcessTime Maximum job process time
-     * @param int          $maxJobLifetime    Maximum job lifetime
+     * @param int          $jobProcessTimeout Maximum job process time
+     * @param int          $jobLifetime    Maximum job lifetime
      *
      * @return string|bool Job ID The ID assigned to the job by Disque, or false
      */
     private function doAdd(
         JobInterface $job,
         $delay,
-        $maxJobProcessTime,
-        $maxJobLifetime
+        $jobProcessTimeout,
+        $jobLifetime
     )
     {
         $options = [
             self::DISQUE_ADDJOB_DELAY => $delay,
-            self::DISQUE_ADDJOB_MAX_JOB_PROCESS_TIME => $maxJobProcessTime,
-            self::DISQUE_ADDJOB_MAX_JOB_LIFETIME => $maxJobLifetime
+            self::DISQUE_ADDJOB_JOB_PROCESS_TIMEOUT => $jobProcessTimeout,
+            self::DISQUE_ADDJOB_JOB_LIFETIME => $jobLifetime
         ];
 
         try {

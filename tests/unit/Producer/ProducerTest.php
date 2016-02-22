@@ -28,8 +28,8 @@ class ProducerTest extends \PHPUnit_Framework_TestCase
     const JOB_ID = 'jobid';
     const JOB_BODY = 'body';
     const JOB_QUEUE = 'queue';
-    const MAX_JOB_PROCESS_TIME = 120;
-    const MAX_JOB_LIFETIME = 21600;
+    const JOB_PROCESS_TIMEOUT = 120;
+    const JOB_LIFETIME = 21600;
     const DELAY = 2;
 
     public function testAddingAJob()
@@ -83,8 +83,8 @@ class ProducerTest extends \PHPUnit_Framework_TestCase
         if ( ! isset($disque)) {
             $options = [
                 Producer::DISQUE_ADDJOB_DELAY => $jobDelay,
-                Producer::DISQUE_ADDJOB_MAX_JOB_PROCESS_TIME => self::MAX_JOB_PROCESS_TIME,
-                Producer::DISQUE_ADDJOB_MAX_JOB_LIFETIME => self::MAX_JOB_LIFETIME
+                Producer::DISQUE_ADDJOB_JOB_PROCESS_TIMEOUT => self::JOB_PROCESS_TIMEOUT,
+                Producer::DISQUE_ADDJOB_JOB_LIFETIME => self::JOB_LIFETIME
             ];
 
             $disque = m::mock(Client::class)
@@ -99,10 +99,10 @@ class ProducerTest extends \PHPUnit_Framework_TestCase
         $jobMarshaller = new JobMarshaller($jobFactory, $serializer);
 
         $config = m::mock(Configuration::class)
-            ->shouldReceive('getMaxJobProcessTime')
-            ->andReturn(self::MAX_JOB_PROCESS_TIME)
-            ->shouldReceive('getMaxJobLifetime')
-            ->andReturn(self::MAX_JOB_LIFETIME)
+            ->shouldReceive('getJobProcessTimeout')
+            ->andReturn(self::JOB_PROCESS_TIMEOUT)
+            ->shouldReceive('getJobLifetime')
+            ->andReturn(self::JOB_LIFETIME)
             ->getMock();
 
         if ( ! isset($logger)) {

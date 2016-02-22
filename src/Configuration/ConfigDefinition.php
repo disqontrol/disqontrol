@@ -37,8 +37,8 @@ class ConfigDefinition implements ConfigurationInterface
 
     const QUEUE_DEFAULTS = 'queue_defaults';
     const FAILURE_QUEUE = 'failure_queue';
-    const MAX_JOB_PROCESS_TIME = 'max_job_process_time';
-    const MAX_JOB_LIFETIME = 'max_job_lifetime';
+    const JOB_PROCESS_TIMEOUT = 'job_process_timeout';
+    const JOB_LIFETIME = 'job_lifetime';
 
     const QUEUES = 'queues';
 
@@ -54,8 +54,8 @@ class ConfigDefinition implements ConfigurationInterface
     /** Default values */
     const LOG_DIR_DEFAULT = 'var/log';
     const CACHE_DIR_DEFAULT = 'var/cache/disqontrol';
-    const MAX_JOB_PROCESS_TIME_DEFAULT = 600;
-    const MAX_JOB_LIFETIME_DEFAULT = 172800;
+    const JOB_PROCESS_TIMEOUT_DEFAULT = 600;
+    const JOB_LIFETIME_DEFAULT = 172800;
     const MIN_PROCESSES_DEFAULT = 2;
     const MAX_PROCESSES_DEFAULT = 5;
     const AUTOSCALE_DEFAULT = true;
@@ -139,12 +139,12 @@ class ConfigDefinition implements ConfigurationInterface
         $node
             ->children()
                 ->scalarNode(self::FAILURE_QUEUE)->end()
-                ->integerNode(self::MAX_JOB_PROCESS_TIME)
-                    ->defaultValue(self::MAX_JOB_PROCESS_TIME_DEFAULT)
+                ->integerNode(self::JOB_PROCESS_TIMEOUT)
+                    ->defaultValue(self::JOB_PROCESS_TIMEOUT_DEFAULT)
                     ->min(0)
                 ->end()
-                ->integerNode(self::MAX_JOB_LIFETIME)
-                    ->defaultValue(self::MAX_JOB_LIFETIME_DEFAULT)
+                ->integerNode(self::JOB_LIFETIME)
+                    ->defaultValue(self::JOB_LIFETIME_DEFAULT)
                     ->min(0)
                 ->end()
             ->end();
@@ -169,10 +169,10 @@ class ConfigDefinition implements ConfigurationInterface
                 ->children()
                     ->append($this->addWorkerNode())
                     ->scalarNode(self::FAILURE_QUEUE)->end()
-                    ->integerNode(self::MAX_JOB_PROCESS_TIME)
+                    ->integerNode(self::JOB_PROCESS_TIMEOUT)
                         ->min(0)
                     ->end()
-                    ->integerNode(self::MAX_JOB_LIFETIME)
+                    ->integerNode(self::JOB_LIFETIME)
                         ->min(0)
                     ->end()
                 ->end();
