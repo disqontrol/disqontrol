@@ -11,17 +11,17 @@
 namespace Disqontrol\Job\Marshaller;
 
 use Disqontrol\Job\JobFactory;
+use Disqontrol\Job\Serializer\SerializerInterface;
 use Disque\Command\Response\JobsResponse AS Response;
 use Disque\Command\Response\JobsWithQueueResponse AS QueueResponse;
 use Disque\Command\Response\JobsWithCountersResponse AS Counters;
-use Webmozart\Json\JsonEncoder;
-use Webmozart\Json\JsonDecoder;
-use Exception;
-use RuntimeException;
 use InvalidArgumentException;
 
 /**
  * {@inheritdoc}
+ *
+ * Job Marshaller ignores exceptions thrown from the Serializer, because they
+ * should be handled on a higher level. Don't forget to catch them.
  *
  * @author Martin Schlemmer
  */
@@ -33,24 +33,20 @@ class JobMarshaller implements MarshallerInterface
     private $jobFactory;
 
     /**
-     * @var JsonEncoder
+     * @var SerializerInterface
      */
-    protected $encoder;
+    private $serializer;
 
     /**
-     * @var JsonDecoder
+     * @param JobFactory          $jobFactory
+     * @param SerializerInterface $serializer
      */
-    protected $decoder;
-
-    /**
-     * @param JobFactory $jobFactory
-     */
-    public function __construct(JobFactory $jobFactory)
-    {
+    public function __construct(
+        JobFactory $jobFactory,
+        SerializerInterface $serializer
+    ) {
         $this->jobFactory = $jobFactory;
-        $this->encoder = new JsonEncoder();
-        $this->decoder = new JsonDecoder();
-        $this->decoder->setObjectDecoding(JsonDecoder::ASSOC_ARRAY);
+        $this->serializer = $serializer;
     }
 
     /**
@@ -58,7 +54,7 @@ class JobMarshaller implements MarshallerInterface
      */
     public function marshal($jobBody)
     {
-        return $this->serialize($jobBody);
+        return $this->serializer->serialize($jobBody);
     }
 
     /**
@@ -72,7 +68,7 @@ class JobMarshaller implements MarshallerInterface
             );
         }
 
-        $jobBody = $this->deserialize($getJobResponse[Response::KEY_BODY]);
+        $jobBody = $this->serializer->deserialize($getJobResponse[Response::KEY_BODY]);
         $queue = $getJobResponse[QueueResponse::KEY_QUEUE];
         $jobId = $getJobResponse[Response::KEY_ID];
 
@@ -88,50 +84,6 @@ class JobMarshaller implements MarshallerInterface
             $nacks,
             $additionalDeliveries
         );
-    }
-
-    /**
-     * Serialize a job body for Disque
-     *
-     * @param array|string $jobBody
-     *
-     * @return string Serialized job body
-     *
-     * @throws RuntimeException
-     */
-    protected function serialize($jobBody)
-    {
-        try {
-            $serializedBody = $this->encoder->encode($jobBody);
-        } catch (Exception $e) {
-            throw new RuntimeException(
-                'Could not serialize job body. ' . $e->getMessage()
-            );
-        }
-
-        return $serializedBody;
-    }
-
-    /**
-     * Deserialize a job body from Disque
-     *
-     * @param string $jobBody
-     *
-     * @return array|string Deserialized job body
-     *
-     * @throws RuntimeException
-     */
-    protected function deserialize($jobBody)
-    {
-        try {
-            $deserializedBody = $this->decoder->decode($jobBody);
-        } catch (Exception $e) {
-            throw new RuntimeException(
-                'Could not deserialize job body. ' . $e->getMessage()
-            );
-        }
-
-        return $deserializedBody;
     }
 
     /**

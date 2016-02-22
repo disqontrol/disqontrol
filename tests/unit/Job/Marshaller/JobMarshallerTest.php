@@ -13,6 +13,7 @@ namespace Disqontrol\Job\Marshaller;
 use Disqontrol\Job\Job;
 use Disqontrol\Job\JobFactory;
 use Disqontrol\Job\JobInterface;
+use Disqontrol\Job\Serializer\JsonSerializer;
 use Disque\Command\Response\JobsResponse AS Response;
 use Disque\Command\Response\JobsWithQueueResponse AS QueueResponse;
 use Disque\Command\Response\JobsWithCountersResponse AS Counters;
@@ -39,7 +40,8 @@ class JobMarshallerTest extends \PHPUnit_Framework_TestCase
     public function setUp()
     {
         $jobFactory = new JobFactory();
-        $this->jm = new JobMarshaller($jobFactory);
+        $serializer = new JsonSerializer();
+        $this->jm = new JobMarshaller($jobFactory, $serializer);
     }
 
     public function testInstance()

@@ -35,10 +35,14 @@ services:
     job_factory:
         class: Disqontrol\Job\JobFactory
 
+    job_serializer:
+        class: Disqontrol\Job\Serializer\JsonSerializer
+
     job_marshaller:
         class: Disqontrol\Job\Marshaller\JobMarshaller
         arguments:
             - '@job_factory'
+            - '@job_serializer'
 
     producer:
         class: Disqontrol\Producer\Producer
