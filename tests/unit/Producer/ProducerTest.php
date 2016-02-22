@@ -11,6 +11,7 @@
 namespace Disqontrol\Producer;
 
 use Disqontrol\Job\Marshaller\JobMarshaller;
+use Disqontrol\Job\Serializer\JsonSerializer;
 use Mockery as m;
 use Disqontrol\Job\Job;
 use Disqontrol\Configuration\Configuration;
@@ -94,7 +95,8 @@ class ProducerTest extends \PHPUnit_Framework_TestCase
         }
 
         $jobFactory = new JobFactory();
-        $jobMarshaller = new JobMarshaller($jobFactory);
+        $serializer = new JsonSerializer();
+        $jobMarshaller = new JobMarshaller($jobFactory, $serializer);
 
         $config = m::mock(Configuration::class)
             ->shouldReceive('getMaxJobProcessTime')
