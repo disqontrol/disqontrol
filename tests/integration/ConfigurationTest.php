@@ -79,20 +79,20 @@ class ConfigurationTest extends \PHPUnit_Framework_TestCase
         // Grab the first queue name
         $queue = current(array_keys($configParams[Config::QUEUES]));
         // Unset a parameter of the first queue
-        unset($configParams[Config::QUEUES][$queue][Config::MAX_JOB_LIFETIME]);
+        unset($configParams[Config::QUEUES][$queue][Config::JOB_LIFETIME]);
         // Set our fallback value
-        $configParams[Config::QUEUE_DEFAULTS][Config::MAX_JOB_LIFETIME]
+        $configParams[Config::QUEUE_DEFAULTS][Config::JOB_LIFETIME]
             = self::TEST_JOB_LIFETIME;
 
         $disqontrolConfig = new Configuration($configParams);
 
         // Now check if the fallback parameter was added correctly to the queue
         $queueConfig = $disqontrolConfig->getQueuesConfig()[$queue];
-        $this->assertSame($queueConfig[Config::MAX_JOB_LIFETIME], self::TEST_JOB_LIFETIME);
+        $this->assertSame($queueConfig[Config::JOB_LIFETIME], self::TEST_JOB_LIFETIME);
 
         // And check if the object can return the value for undefined queues, too
         $this->assertSame(
-            $disqontrolConfig->getMaxJobLifetime(self::UNDEFINED_QUEUE),
+            $disqontrolConfig->getJobLifetime(self::UNDEFINED_QUEUE),
             self::TEST_JOB_LIFETIME
         );
     }

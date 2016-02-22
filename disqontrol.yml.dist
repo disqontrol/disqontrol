@@ -36,7 +36,7 @@ disqontrol:
         # timed out.
         #
         # If you set this to 0, the job will be delivered at most once.
-        max_job_process_time: 600
+        job_process_timeout: 600
 
         # How long can a job wait in the queue before getting automatically
         # deleted (in seconds)?
@@ -52,7 +52,7 @@ disqontrol:
         #
         # @see function generateJobID() in
         # https://github.com/antirez/disque/blob/master/src/job.c
-        max_job_lifetime: 172800
+        job_lifetime: 172800
 
     # Configuration of queues and their workers
     queues:
@@ -95,8 +95,8 @@ disqontrol:
 
             # You can override the queue defaults defined above
             failure_queue: 'unsent-registration-emails'
-            max_job_process_time: 10
-            max_job_lifetime: 3600
+            job_process_timeout: 10
+            job_lifetime: 3600
 
         # This is another queue
         'profile-update':

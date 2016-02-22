@@ -125,13 +125,13 @@ class Configuration
      *
      * @return int Max job process time in seconds
      */
-    public function getMaxJobProcessTime($queue)
+    public function getJobProcessTimeout($queue)
     {
-        $maxJobProcessTime = isset($this->config[Config::QUEUES][$queue][Config::MAX_JOB_PROCESS_TIME])
-            ? $this->config[Config::QUEUES][$queue][Config::MAX_JOB_PROCESS_TIME]
-            : $this->config[Config::QUEUE_DEFAULTS][Config::MAX_JOB_PROCESS_TIME];
+        $jobProcessTimeout = isset($this->config[Config::QUEUES][$queue][Config::JOB_PROCESS_TIMEOUT])
+            ? $this->config[Config::QUEUES][$queue][Config::JOB_PROCESS_TIMEOUT]
+            : $this->config[Config::QUEUE_DEFAULTS][Config::JOB_PROCESS_TIMEOUT];
 
-        return $maxJobProcessTime;
+        return $jobProcessTimeout;
     }
 
     /**
@@ -141,13 +141,13 @@ class Configuration
      *
      * @return int Max job lifetime in seconds
      */
-    public function getMaxJobLifetime($queue)
+    public function getJobLifetime($queue)
     {
-        $maxJobProcessTime = isset($this->config[Config::QUEUES][$queue][Config::MAX_JOB_LIFETIME])
-            ? $this->config[Config::QUEUES][$queue][Config::MAX_JOB_LIFETIME]
-            : $this->config[Config::QUEUE_DEFAULTS][Config::MAX_JOB_LIFETIME];
+        $jobLifetime = isset($this->config[Config::QUEUES][$queue][Config::JOB_LIFETIME])
+            ? $this->config[Config::QUEUES][$queue][Config::JOB_LIFETIME]
+            : $this->config[Config::QUEUE_DEFAULTS][Config::JOB_LIFETIME];
 
-        return $maxJobProcessTime;
+        return $jobLifetime;
 
     }
 
