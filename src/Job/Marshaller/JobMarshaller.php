@@ -12,6 +12,7 @@ namespace Disqontrol\Job\Marshaller;
 
 use Disqontrol\Job\JobFactory;
 use Disqontrol\Job\Serializer\SerializerInterface;
+use Disqontrol\Logger\MessageFormatter;
 use Disque\Command\Response\JobsResponse AS Response;
 use Disque\Command\Response\JobsWithQueueResponse AS QueueResponse;
 use Disque\Command\Response\JobsWithCountersResponse AS Counters;
@@ -63,9 +64,7 @@ class JobMarshaller implements MarshallerInterface
     public function unmarshal(array $getJobResponse)
     {
         if ( ! $this->disqueResponseIsValid($getJobResponse)) {
-            throw new InvalidArgumentException(
-                'Cannot unmarshal an incomplete GETJOB response'
-            );
+            throw new InvalidArgumentException(MessageFormatter::failedUnmarshal());
         }
 
         $jobBody = $this->serializer->deserialize($getJobResponse[Response::KEY_BODY]);

@@ -32,6 +32,11 @@ class ProducerTest extends \PHPUnit_Framework_TestCase
     const JOB_LIFETIME = 21600;
     const DELAY = 2;
 
+    public function tearDown()
+    {
+        m::close();
+    }
+
     public function testAddingAJob()
     {
         $producer = $this->createProducer();
@@ -62,7 +67,6 @@ class ProducerTest extends \PHPUnit_Framework_TestCase
             ->getMock();
 
         $logger = m::mock(NullLogger::class)
-            ->shouldReceive('debug')
             ->shouldReceive('error')
             ->once()
             ->getMock();

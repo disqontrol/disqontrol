@@ -16,10 +16,12 @@ use Disqontrol\Event\Events;
 use Disqontrol\Job\JobInterface;
 use Disqontrol\Configuration\Configuration;
 use Disqontrol\Job\Marshaller\MarshallerInterface;
+use Disqontrol\Logger\JobLogger;
+use Disqontrol\Logger\MessageFormatter;
 use Disque\Client;
 use Disque\Connection\Response\ResponseException;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use RuntimeException;
 
 /**
@@ -52,7 +54,7 @@ class Producer implements ProducerInterface
     private $config;
 
     /**
-     * @var
+     * @var EventDispatcherInterface
      */
     private $eventDispatcher;
 
@@ -62,20 +64,19 @@ class Producer implements ProducerInterface
     private $logger;
 
     /**
-     * @param Client              $disque
-     * @param MarshallerInterface $marshaller
-     * @param Configuration       $config
-     * @param LoggerInterface     $logger
-     * @param EventDispatcher     $eventDispatcher
+     * @param Client                   $disque
+     * @param MarshallerInterface      $marshaller
+     * @param Configuration            $config
+     * @param LoggerInterface          $logger
+     * @param EventDispatcherInterface $eventDispatcher
      */
     public function __construct(
         Client $disque,
         MarshallerInterface $marshaller,
         Configuration $config,
         LoggerInterface $logger,
-        EventDispatcher $eventDispatcher
-    )
-    {
+        EventDispatcherInterface $eventDispatcher
+    ) {
         $this->disque = $disque;
         $this->marshaller = $marshaller;
         $this->config = $config;
@@ -130,7 +131,7 @@ class Producer implements ProducerInterface
      * @param JobInterface $job               The job to add
      * @param int          $delay             Job delay in seconds
      * @param int          $jobProcessTimeout Maximum job process time
-     * @param int          $jobLifetime    Maximum job lifetime
+     * @param int          $jobLifetime       Maximum job lifetime
      *
      * @return string|bool Job ID The ID assigned to the job by Disque, or false
      */
@@ -139,8 +140,7 @@ class Producer implements ProducerInterface
         $delay,
         $jobProcessTimeout,
         $jobLifetime
-    )
-    {
+    ) {
         $options = [
             self::DISQUE_ADDJOB_DELAY => $delay,
             self::DISQUE_ADDJOB_JOB_PROCESS_TIMEOUT => $jobProcessTimeout,
@@ -151,6 +151,7 @@ class Producer implements ProducerInterface
             $jobBody = $this->marshaller->marshal($job->getBodyWithMetadata());
         } catch (RuntimeException $e) {
             $this->logger->error($e->getMessage());
+
             return false;
         }
 
@@ -164,16 +165,14 @@ class Producer implements ProducerInterface
             );
 
             $this->logger->info(
-                sprintf('Added a job %s to the queue %s', $jobId, $queue)
+                MessageFormatter::jobAdded($jobId, $queue)
             );
 
         } catch (ResponseException $e) {
             $jobId = false;
 
-            $this->logger->error($e->getMessage());
-            $this->logger->debug(
-                sprintf('Body of the not added job: %s', $jobBody)
-            );
+            $context[JobLogger::JOB_INDEX] = $job;
+            $this->logger->error($e->getMessage(), $context);
         }
 
         return $jobId;

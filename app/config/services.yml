@@ -16,10 +16,17 @@ services:
         tags:
             - { name: disqontrol.command }
 
-    logger:
+    monolog_logger:
         class: Monolog\Logger
         arguments:
             - 'disqontrol'
+
+    logger:
+        class: Disqontrol\Logger\JobLogger
+        arguments:
+            - '@monolog_logger'
+            - '@job_serializer'
+            - '@event_dispatcher'
 
     disque_client_factory:
         class: Disqontrol\DisqueClientFactory

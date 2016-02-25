@@ -68,6 +68,15 @@ final class Events
     const JOB_PROCESS_AFTER = 'disqontrol.job.process.after';
 
     /**
+     * Whenever we log the job details, that is someone called the logger
+     * and added a Job object to the context.
+     * Dispatched from JobLogger
+     *
+     * @see LogJobDetailsEvent
+     */
+    const LOG_JOB_DETAILS = 'disqontrol.job.log';
+
+    /**
      * After the startup of a consumer
      * Dispatched from Consumer
      */
