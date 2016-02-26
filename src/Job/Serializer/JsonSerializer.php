@@ -10,6 +10,7 @@
 
 namespace Disqontrol\Job\Serializer;
 
+use Disqontrol\Logger\MessageFormatter;
 use Webmozart\Json\JsonEncoder;
 use Webmozart\Json\JsonDecoder;
 use Exception;
@@ -45,7 +46,7 @@ class JsonSerializer implements SerializerInterface {
             $serializedBody = $this->encoder->encode($jobBody);
         } catch (Exception $e) {
             throw new RuntimeException(
-                'Could not serialize job body. ' . $e->getMessage()
+                MessageFormatter::failedSerialize($e->getMessage())
             );
         }
 
@@ -61,7 +62,7 @@ class JsonSerializer implements SerializerInterface {
             $deserializedBody = $this->decoder->decode($jobBody);
         } catch (Exception $e) {
             throw new RuntimeException(
-                'Could not deserialize job body. ' . $e->getMessage()
+                MessageFormatter::failedDeserialize($e->getMessage())
             );
         }
 
