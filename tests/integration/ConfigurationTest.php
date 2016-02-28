@@ -75,11 +75,12 @@ class ConfigurationTest extends \PHPUnit_Framework_TestCase
      */
     public function testAddedFallbackParameters()
     {
-        $configParams = $this->configParams;
-        // Grab the first queue name
-        $queue = current(array_keys($configParams[Config::QUEUES]));
+        $queue = $this->getFirstQueue();
+
         // Unset a parameter of the first queue
+        $configParams = $this->configParams;
         unset($configParams[Config::QUEUES][$queue][Config::JOB_LIFETIME]);
+
         // Set our fallback value
         $configParams[Config::QUEUE_DEFAULTS][Config::JOB_LIFETIME]
             = self::TEST_JOB_LIFETIME;
@@ -95,5 +96,35 @@ class ConfigurationTest extends \PHPUnit_Framework_TestCase
             $disqontrolConfig->getJobLifetime(self::UNDEFINED_QUEUE),
             self::TEST_JOB_LIFETIME
         );
+    }
+
+    /**
+     * Test a fallback parameter of the failure-queue directive
+     *
+     * Because we forgot it the first time.
+     */
+    public function testFailureQueueFallback()
+    {
+        $queue = $this->getFirstQueue();
+
+        $configParams = $this->configParams;
+        unset($configParams[Config::QUEUES][$queue][Config::FAILURE_QUEUE]);
+
+        $config = new Configuration($configParams);
+
+        $this->assertSame(
+            Config::FAILURE_QUEUE_DEFAULT,
+            $config->getFailureQueue($queue)
+        );
+    }
+
+    /**
+     * Grab the first queue name from the loaded configuration
+     *
+     * @return string Name of the first queue
+     */
+    private function getFirstQueue()
+    {
+        return current(array_keys($this->configParams[Config::QUEUES]));
     }
 }

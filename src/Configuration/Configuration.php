@@ -21,6 +21,12 @@ use Disqontrol\Configuration\ConfigDefinition as Config;
 class Configuration
 {
     /**
+     * Maximum allowed job TTL. This is defined in Disque.
+     * See comments in disqontrol.yml.dist
+     */
+    const MAX_ALLOWED_JOB_LIFETIME = 3932100;
+
+    /**
      * Configuration array
      *
      * @var array
@@ -117,6 +123,30 @@ class Configuration
         return $this->config[Config::CONSUMER_DEFAULTS];
     }
 
+    /**
+     * Get the maximum number a failed job in the given queue can be retried
+     *
+     * @param string $queue
+     *
+     * @return int The maximum number of retries for the given queue
+     */
+    public function getMaxRetries($queue)
+    {
+        return $this->getQueueParameterOrDefault($queue, Config::MAX_RETRIES);
+    }
+
+    /**
+     * Get the failure queue for completely failed jobs for the given queue
+     *
+     * @param string $queue
+     *
+     * @return string Failure queue
+     */
+    public function getFailureQueue($queue)
+    {
+        return $this->getQueueParameterOrDefault($queue, Config::FAILURE_QUEUE);
+    }
+
 
     /**
      * Get max job process time from the configuration for the given queue
@@ -127,11 +157,7 @@ class Configuration
      */
     public function getJobProcessTimeout($queue)
     {
-        $jobProcessTimeout = isset($this->config[Config::QUEUES][$queue][Config::JOB_PROCESS_TIMEOUT])
-            ? $this->config[Config::QUEUES][$queue][Config::JOB_PROCESS_TIMEOUT]
-            : $this->config[Config::QUEUE_DEFAULTS][Config::JOB_PROCESS_TIMEOUT];
-
-        return $jobProcessTimeout;
+        return $this->getQueueParameterOrDefault($queue, Config::JOB_PROCESS_TIMEOUT);
     }
 
     /**
@@ -143,12 +169,34 @@ class Configuration
      */
     public function getJobLifetime($queue)
     {
-        $jobLifetime = isset($this->config[Config::QUEUES][$queue][Config::JOB_LIFETIME])
-            ? $this->config[Config::QUEUES][$queue][Config::JOB_LIFETIME]
-            : $this->config[Config::QUEUE_DEFAULTS][Config::JOB_LIFETIME];
+        return $this->getQueueParameterOrDefault($queue, Config::JOB_LIFETIME);
+    }
 
-        return $jobLifetime;
+    /**
+     * Get the maximum allowed job lifetime as defined in Disque
+     *
+     * @return int Max job lifetime in seconds
+     */
+    public function getMaxAllowedJobLifetime()
+    {
+        return self::MAX_ALLOWED_JOB_LIFETIME;
+    }
 
+    /**
+     * Get a config parameter for a queue, or a default value if it's not defined
+     *
+     * @param string $queue
+     * @param string $parameterName
+     *
+     * @return mixed
+     */
+    private function getQueueParameterOrDefault($queue, $parameterName)
+    {
+        if (isset($this->config[Config::QUEUES][$queue][$parameterName])) {
+            return $this->config[Config::QUEUES][$queue][$parameterName];
+        }
+
+        return $this->config[Config::QUEUE_DEFAULTS][$parameterName];
     }
 
     /**

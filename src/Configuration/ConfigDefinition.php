@@ -36,6 +36,7 @@ class ConfigDefinition implements ConfigurationInterface
     const RESPONSE_TIMEOUT = 'response_timeout';
 
     const QUEUE_DEFAULTS = 'queue_defaults';
+    const MAX_RETRIES = 'max_retries';
     const FAILURE_QUEUE = 'failure_queue';
     const JOB_PROCESS_TIMEOUT = 'job_process_timeout';
     const JOB_LIFETIME = 'job_lifetime';
@@ -54,6 +55,8 @@ class ConfigDefinition implements ConfigurationInterface
     /** Default values */
     const LOG_DIR_DEFAULT = 'var/log';
     const CACHE_DIR_DEFAULT = 'var/cache/disqontrol';
+    const MAX_RETRIES_DEFAULT = 25;
+    const FAILURE_QUEUE_DEFAULT = 'failed-jobs';
     const JOB_PROCESS_TIMEOUT_DEFAULT = 600;
     const JOB_LIFETIME_DEFAULT = 172800;
     const MIN_PROCESSES_DEFAULT = 2;
@@ -138,15 +141,21 @@ class ConfigDefinition implements ConfigurationInterface
 
         $node
             ->children()
-                ->scalarNode(self::FAILURE_QUEUE)->end()
+                ->integerNode(self::MAX_RETRIES)
+                    ->defaultValue(self::MAX_RETRIES_DEFAULT)
+                    ->min(0)
+                    ->end()
+                ->scalarNode(self::FAILURE_QUEUE)
+                    ->defaultValue(self::FAILURE_QUEUE_DEFAULT)
+                    ->end()
                 ->integerNode(self::JOB_PROCESS_TIMEOUT)
                     ->defaultValue(self::JOB_PROCESS_TIMEOUT_DEFAULT)
                     ->min(0)
-                ->end()
+                    ->end()
                 ->integerNode(self::JOB_LIFETIME)
                     ->defaultValue(self::JOB_LIFETIME_DEFAULT)
                     ->min(0)
-                ->end()
+                    ->end()
             ->end();
 
         return $node;
