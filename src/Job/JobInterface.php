@@ -83,4 +83,59 @@ interface JobInterface extends DisquePhpJobInterface
      * @return array Job body with metadata
      */
     public function getBodyWithMetadata();
+
+    /**
+     * Get the total number of times this job has been retried for failure or timeout
+     *
+     * Under normal circumstances we can calculate the number of retries
+     * from the number of NACKs and AdditionalDeliveries of the job in Disque.
+     * However to implement a more complex system of retries, eg. with
+     * an exponential backoff (an ever longer pause between retries), we must
+     * create a new job in Disque, because right now it is not possible
+     * to return a job back to the queue with a delay.
+     * With the creation of a new job the number of NACKS and AddDeliveries
+     * is lost in Disque.
+     *
+     * @see https://github.com/antirez/disque/issues/170
+     *
+     * In order to keep track of the total number of retries, we'll make use
+     * of the metadata. Whenever we retry a job by creating a new one,
+     * we'll save the number of retries so far in the metadata.
+     *
+     * This method should understand that the number of retries is the total
+     * number of the NACK and add-deliveries counters in Disque summed with
+     * the number from the metadata.
+     *
+     * @return int
+     */
+    public function getRetryCount();
+
+    /**
+     * Set the number of times this job has been retried so far
+     *
+     * @param int $retryCount The number of retries
+     */
+    public function setPreviousRetryCount($retryCount);
+
+    /**
+     * Get the original job ID
+     *
+     * Like in the case of getRetryCount() this is another case where we lose
+     * information if we jump jobs because of the inability of Disque to NACK
+     * a job with a delay.
+     *
+     * Let's keep the original job ID for monitoring purposes.
+     * If this is the first "version" of the job (it hasn't been retried before)
+     * the method returns the actual job ID.
+     *
+     * @return string The original job ID
+     */
+    public function getOriginalId();
+
+    /**
+     * Set the original job ID
+     *
+     * @param string $originalJobId
+     */
+    public function setOriginalId($originalJobId);
 }

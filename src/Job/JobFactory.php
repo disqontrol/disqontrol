@@ -67,4 +67,37 @@ class JobFactory
             $additionalDeliveries
         );
     }
+
+    /**
+     * Create a clone of an existing job, remembering its ID and incrementing
+     * the retry count by 1
+     *
+     * This is used to work around the limitations of Disque which cannot
+     * move jobs to a different queue, NACK them with a delay or change the job
+     * body.
+     *
+     * In all these situations, we create a new job and store the original job ID
+     * and the retry count in the job metadata.
+     *
+     * @see https://github.com/antirez/disque/issues/174
+     *
+     * @param JobInterface $job
+     *
+     * @return JobInterface A new job ready to be inserted in Disque
+     */
+    public function cloneFailedJob(JobInterface $job)
+    {
+        $body = $job->getBodyWithMetadata();
+        $queue = $job->getQueue();
+        $newJob = $this->createNewJob($body, $queue);
+
+        $originalId = $job->getOriginalId();
+        $newJob->setOriginalId($originalId);
+
+        // Because this is a failed job, increment the retry count right here
+        $retryCount = $job->getRetryCount() + 1;
+        $newJob->setPreviousRetryCount($retryCount);
+
+        return $newJob;
+    }
 }

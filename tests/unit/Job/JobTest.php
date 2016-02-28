@@ -112,4 +112,35 @@ class JobTest extends \PHPUnit_Framework_TestCase
 
         $this->assertSame($originalBody, $newJob->getBodyWithMetadata());
     }
+
+    public function testRetryCountEqualToDisqueCount()
+    {
+        $nacks = 2;
+        $this->j->setNacks($nacks);
+        $addDeliveries = 3;
+        $this->j->setAdditionalDeliveries($addDeliveries);
+
+        $totalRetries = $nacks + $addDeliveries;
+        $this->assertSame($totalRetries, $this->j->getRetryCount());
+    }
+
+    public function testRetryCountIncludesPreviousRetries()
+    {
+        $nacks = 2;
+        $this->j->setNacks($nacks);
+        $addDeliveries = 3;
+        $this->j->setAdditionalDeliveries($addDeliveries);
+        $retryCount = 4;
+        $this->j->setPreviousRetryCount($retryCount);
+
+        $totalRetries = $nacks + $addDeliveries + $retryCount;
+        $this->assertSame($totalRetries, $this->j->getRetryCount());
+    }
+
+    public function testSetGetOriginalJobId()
+    {
+        $originalId = 'origid';
+        $this->j->setOriginalId($originalId);
+        $this->assertSame($originalId, $this->j->getOriginalId());
+    }
 }
