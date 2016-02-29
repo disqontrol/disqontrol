@@ -95,5 +95,4 @@ class Producer implements ProducerInterface
 
         return $result;
     }
-
 }

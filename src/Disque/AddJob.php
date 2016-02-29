@@ -103,7 +103,7 @@ class AddJob
             );
 
             $this->logger->info(
-                MessageFormatter::jobAdded($jobId, $queue)
+                MessageFormatter::jobAdded($jobId, $queue, $job->getOriginalId())
             );
 
         } catch (ResponseException $e) {

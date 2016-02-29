@@ -11,6 +11,7 @@
 namespace Disqontrol\Worker;
 
 use GerritDrost\Lib\Enum\Enum;
+use InvalidArgumentException;
 
 /**
  * WorkerType enumerates all known worker types for type hinting
@@ -39,4 +40,45 @@ class WorkerType extends Enum
     const HTTP = 'http';
     const PHP = 'php';
     const PHP_CLI = 'php-cli';
+
+    /**
+     * Get the WorkerType instance by its value.
+     *
+     * Always returns the class on which the method is called.
+     * I.e. WorkerType::getByValue(...) returns WorkerType, not Enum.
+     *
+     * @param mixed $enumValue The enum value to search.
+     *
+     * @throws InvalidArgumentException if specified value and default value is not defined
+     *
+     * @return static
+     */
+    public static function getByValue($enumValue)
+    {
+        $enum = self::findEnumByValue($enumValue);
+        if ($enum !== null) {
+            return $enum;
+        }
+
+        $msg = sprintf("%s with value '%s' is not defined", get_class(), $enumValue);
+        throw new InvalidArgumentException($msg);
+    }
+
+    /**
+     * Search for the Enum with a specified value
+     *
+     * @param mixed $value
+     *
+     * @return Enum|null Return the Enum with the specified value, otherwise return null
+     */
+    private static function findEnumByValue($value)
+    {
+        $enums = array_filter(self::getEnumValues(), function (Enum $enum) use ($value) {
+            return $enum->getConstValue() === $value;
+        });
+
+        if ( ! empty($enums)) {
+            return reset($enums);
+        }
+    }
 }

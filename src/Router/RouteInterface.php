@@ -37,7 +37,23 @@ interface RouteInterface
      * 
      * @param JobInterface $job
      *
-     * @return WorkerDirectionsInterface Worker directions
+     * @return null|WorkerDirectionsInterface Worker directions or null
      */
     public function getDirections(JobInterface $job);
+
+    /**
+     * Get the names of queues supported by this route
+     *
+     * @return string[] Names of supported queues
+     */
+    public function getSupportedQueues();
+
+    /**
+     * Can the route decide about a job going to this particular queue?
+     *
+     * @param string $queue
+     *
+     * @return bool
+     */
+    public function supportsQueue($queue);
 }

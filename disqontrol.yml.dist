@@ -150,7 +150,8 @@ disqontrol:
             # regarding the URL length.
             worker:
 
-                # This is the only required line.
+                # The worker type and address - the only required line - must
+                # be the first line in the worker definition.
                 http: 'https://example.com/worker?key={api_key}'
 
                 # The request method of the worker HTTP call.

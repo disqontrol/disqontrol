@@ -29,7 +29,7 @@ services:
             - '@event_dispatcher'
 
     disque_client_factory:
-        class: Disqontrol\DisqueClientFactory
+        class: Disqontrol\Disque\DisqueClientFactory
         arguments:
             - '@configuration'
 
@@ -72,4 +72,89 @@ services:
             - '@add_job'
             - '@job_factory'
             - '@configuration'
+            - '@logger'
+
+    process_factory:
+        class: Disqontrol\Dispatcher\Call\Cli\ProcessFactory
+
+    cli_call_factory:
+        class: Disqontrol\Dispatcher\Call\Factory\CliCallFactory
+        arguments:
+            - '@configuration'
+            - '@job_marshaller'
+            - '@process_factory'
+
+    call_factory:
+        class: Disqontrol\Dispatcher\Call\Factory\CallFactory
+        arguments:
+            - '@cli_call_factory'
+
+    job_router_factory:
+        class: Disqontrol\Router\JobRouterFactory
+        arguments:
+            - '@configuration'
+            - '@call_factory'
+            - '@event_dispatcher'
+
+    job_router:
+        class: Disqontrol\Router\JobRouter
+        factory:
+            - '@job_router_factory'
+            - getRouter
+
+    exponential_backoff:
+        class: Disqontrol\Dispatcher\Failure\ExponentialBackoff
+
+    failure_strategy_collection:
+        class: Disqontrol\Dispatcher\Failure\FailureStrategyCollection
+        arguments:
+            - '@configuration'
+
+    job_dispatcher:
+        class: Disqontrol\Dispatcher\JobDispatcher
+        arguments:
+            - '@job_router'
+            - '@disque'
+            - '@failure_strategy_collection'
+            - '@logger'
+
+    # Synchronous services (jobs are processed right away, circumventing Disque)
+    sync_failure_strategy_collection:
+        class: Disqontrol\Dispatcher\Failure\FailureStrategyCollection
+        arguments:
+            - '@configuration'
+        calls:
+            - ['addFailureStrategy', ['@log_and_throw_away']]
+
+    sync_dispatcher:
+        class: Disqontrol\Dispatcher\JobDispatcher
+        arguments:
+            - '@job_router'
+            - '@sync_failure_strategy_collection'
+            - '@logger'
+
+    # Failure strategies
+    # Failure strategies with the tag "failure_strategy" will be automatically
+    # registered in the failure_strategy_collection
+    # See FailureStrategiesCompilerPass
+    retry:
+        class: Disqontrol\Dispatcher\Failure\RetryWithExponentialBackoff
+        arguments:
+            - '@fail_job'
+            - '@exponential_backoff'
+        tags:
+            - { name: failure_strategy }
+
+    retry_immediately:
+        class: Disqontrol\Dispatcher\Failure\RetryImmediately
+        arguments:
+            - '@fail_job'
+        tags:
+            - { name: failure_strategy }
+
+    # This failure strategy is only used in the synchronous mode. It has no tags
+    # because we don't want to register it automatically as an available strategy.
+    log_and_throw_away:
+        class: Disqontrol\Dispatcher\Failure\LogAndThrowAway
+        arguments:
             - '@logger'

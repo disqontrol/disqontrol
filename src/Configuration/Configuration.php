@@ -11,6 +11,7 @@
 namespace Disqontrol\Configuration;
 
 use Disqontrol\Configuration\ConfigDefinition as Config;
+use Disqontrol\Dispatcher\Failure\FailureStrategyInterface;
 
 /**
  * The Disqontrol configuration wrapped in an object

@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "24529d2716d3b2c766512ccf698721ab",
-    "content-hash": "0895f816ed86b29c534dc3268c27abe5",
+    "hash": "1f42dcc7a08e2cd189e06d54fbd6a9b4",
+    "content-hash": "28e527759083750a8881cdba1f3c6fdc",
     "packages": [
         {
             "name": "doctrine/collections",
@@ -445,7 +445,7 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/config/zipball/8c83ff9a2ffbed1e606bc816db11ddc2385a16ee",
+                "url": "https://api.github.com/repos/symfony/config/zipball/38711092665edc06ef55e842942fb813932ff4ac",
                 "reference": "8c83ff9a2ffbed1e606bc816db11ddc2385a16ee",
                 "shasum": ""
             },
@@ -820,6 +820,45 @@
             "description": "Symfony Yaml Component",
             "homepage": "https://symfony.com",
             "time": "2016-02-02 13:44:19"
+        },
+        {
+            "name": "vivait/backoff",
+            "version": "1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/vivait/backoff.git",
+                "reference": "e066dad7c9b80b27c2dc616548b4bf2d21ea00b4"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/vivait/backoff/zipball/e066dad7c9b80b27c2dc616548b4bf2d21ea00b4",
+                "reference": "e066dad7c9b80b27c2dc616548b4bf2d21ea00b4",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.4.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "3.7.*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Vivait\\Backoff\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "proprietary"
+            ],
+            "authors": [
+                {
+                    "name": "Kiel Goodman",
+                    "email": "kiel@vivait.co.uk"
+                }
+            ],
+            "description": "A configurable and expandable backoff timing generator with the idea to be used for async services",
+            "time": "2015-07-17 12:17:43"
         },
         {
             "name": "webmozart/assert",

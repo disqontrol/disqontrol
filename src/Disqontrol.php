@@ -12,6 +12,7 @@ namespace Disqontrol;
 
 use Disqontrol\Configuration\ConfigDefinition;
 use Disqontrol\Configuration\ConsoleCommandsCompilerPass;
+use Disqontrol\Configuration\FailureStrategiesCompilerPass;
 use Disqontrol\Exception\ConfigurationException;
 use Disqontrol\Exception\FilesystemException;
 use Disque\Client;
@@ -209,6 +210,7 @@ final class Disqontrol
         $loader->load(self::SERVICES_FILE);
 
         $container->addCompilerPass(new ConsoleCommandsCompilerPass());
+        $container->addCompilerPass(new FailureStrategiesCompilerPass());
 
         $container->addCompilerPass(new RegisterListenersPass(
             self::EVENT_DISPATCHER_SERVICE,
@@ -309,7 +311,7 @@ final class Disqontrol
     {
         $logger = $this->container->get('logger');
         $streamHandler = new StreamHandler($this->getLogDir() . '/disqontrol.log', Logger::DEBUG);
-        $logger->pushHandler($streamHandler);
+        $logger->getMonologLogger()->pushHandler($streamHandler);
     }
 
     /**

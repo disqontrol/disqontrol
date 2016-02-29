@@ -8,7 +8,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Disqontrol;
+namespace Disqontrol\Disque;
 
 use Disqontrol\Configuration\Configuration;
 use Disqontrol\Configuration\ConfigDefinition;
