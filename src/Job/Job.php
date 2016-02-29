@@ -31,6 +31,23 @@ class Job extends BaseJob implements JobInterface
     const KEY_METADATA = 'metadata';
 
     /**
+     * Metadata keys for remembering original job information when jumping jobs
+     *
+     * Sometimes we have to create a new job when we would actually like to keep
+     * the old one and just delay or update it. The new job has the original body,
+     * it is in fact the same job from the view of the caller.
+     * In Disque, however, we lose the original job ID and the retry count.
+     *
+     * We work around this loss of information by storing the original information
+     * in the metadata of the new job.
+     *
+     * For a more detailed explanation
+     * @see Disqontrol\Job\JobInterface::getRetryCount()
+     */
+    const KEY_RETRIES = 'retries';
+    const KEY_ORIGINAL_ID = 'original-id';
+
+    /**
      * This is a stricter constructor requiring both the job body and its queue
      *
      * A job must always know its body and the queue it belongs to.
@@ -143,6 +160,49 @@ class Job extends BaseJob implements JobInterface
         }
         
         return false;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getRetryCount()
+    {
+        $previousRetries = $this->getMetadata(self::KEY_RETRIES);
+        if (empty($previousRetries)) {
+            $previousRetries = 0;
+        }
+
+        $disqueRetries = $this->getNacks() + $this->getAdditionalDeliveries();
+
+        return ($previousRetries + $disqueRetries);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setPreviousRetryCount($retryCount)
+    {
+        $this->setMetadata(self::KEY_RETRIES, (int) $retryCount);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getOriginalId()
+    {
+        if ($this->hasMetadata(self::KEY_ORIGINAL_ID)) {
+            return $this->getMetadata(self::KEY_ORIGINAL_ID);
+        }
+
+        return $this->id;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setOriginalId($originalJobId)
+    {
+        $this->setMetadata(self::KEY_ORIGINAL_ID, $originalJobId);
     }
     
 }
