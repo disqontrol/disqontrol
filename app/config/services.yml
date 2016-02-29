@@ -51,12 +51,16 @@ services:
             - '@job_factory'
             - '@job_serializer'
 
-    producer:
-        class: Disqontrol\Producer\Producer
+    add_job:
+        class: Disqontrol\Disque\AddJob
         arguments:
             - '@disque'
             - '@job_marshaller'
-            - '@configuration'
             - '@logger'
-            - '@event_dispatcher'
 
+    producer:
+        class: Disqontrol\Producer\Producer
+        arguments:
+            - '@configuration'
+            - '@event_dispatcher'
+            - '@add_job'

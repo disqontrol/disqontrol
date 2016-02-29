@@ -10,13 +10,11 @@
 
 namespace Disqontrol\Producer;
 
-use Disqontrol\Job\Marshaller\JobMarshaller;
-use Disqontrol\Job\Serializer\JsonSerializer;
+use Disqontrol\Disque\AddJob;
 use Mockery as m;
 use Disqontrol\Job\Job;
 use Disqontrol\Configuration\Configuration;
 use Disque\Connection\Response\ResponseException;
-use Disqontrol\Job\JobFactory;
 use Disque\Client;
 use Psr\Log\NullLogger;
 use Symfony\Component\EventDispatcher\EventDispatcher;
@@ -50,9 +48,15 @@ class ProducerTest extends \PHPUnit_Framework_TestCase
 
     public function testAddingADelayedJob()
     {
-        $producer = $this->createProducer(null, null, self::DELAY);
-
         $job = new Job('body', 'queue');
+        $addJob = m::mock(AddJob::class)
+            ->shouldReceive('add')
+            ->with($job, self::DELAY, self::JOB_PROCESS_TIMEOUT, self::JOB_LIFETIME)
+            ->andReturn(self::JOB_ID)
+            ->getMock();
+
+        $producer = $this->createProducer($addJob);
+
         $result = $producer->add($job, self::DELAY);
 
         $this->assertTrue($result);
@@ -61,17 +65,12 @@ class ProducerTest extends \PHPUnit_Framework_TestCase
 
     public function testFailureAddingAJob()
     {
-        $disque = m::mock(Client::class)
-            ->shouldReceive('addJob')
-            ->andThrow(ResponseException::class)
+        $addJob = m::mock(AddJob::class)
+            ->shouldReceive('add')
+            ->andReturn(false)
             ->getMock();
 
-        $logger = m::mock(NullLogger::class)
-            ->shouldReceive('error')
-            ->once()
-            ->getMock();
-
-        $producer = $this->createProducer($disque, $logger);
+        $producer = $this->createProducer($addJob);
 
         $job = new Job('body', 'queue');
         $result = $producer->add($job);
@@ -79,39 +78,13 @@ class ProducerTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($result);
     }
 
-    private function createProducer(
-        $disque = null,
-        $logger = null,
-        $jobDelay = 0
-    ) {
-        if ( ! isset($disque)) {
-            $options = [
-                Producer::DISQUE_ADDJOB_DELAY => $jobDelay,
-                Producer::DISQUE_ADDJOB_JOB_PROCESS_TIMEOUT => self::JOB_PROCESS_TIMEOUT,
-                Producer::DISQUE_ADDJOB_JOB_LIFETIME => self::JOB_LIFETIME
-            ];
-
-            $disque = m::mock(Client::class)
-                ->shouldReceive('addJob')
-                ->with(self::JOB_QUEUE, anything(), $options)
-                ->andReturn(self::JOB_ID)
-                ->getMock();
-        }
-
-        $jobFactory = new JobFactory();
-        $serializer = new JsonSerializer();
-        $jobMarshaller = new JobMarshaller($jobFactory, $serializer);
-
+    private function createProducer($addJob = null) {
         $config = m::mock(Configuration::class)
             ->shouldReceive('getJobProcessTimeout')
             ->andReturn(self::JOB_PROCESS_TIMEOUT)
             ->shouldReceive('getJobLifetime')
             ->andReturn(self::JOB_LIFETIME)
             ->getMock();
-
-        if ( ! isset($logger)) {
-            $logger = new NullLogger();
-        }
 
         $eventDispatcher = m::mock(EventDispatcher::class)
             ->shouldReceive('dispatch')
@@ -122,13 +95,14 @@ class ProducerTest extends \PHPUnit_Framework_TestCase
             ->once()
             ->getMock();
 
-        $p = new Producer(
-            $disque,
-            $jobMarshaller,
-            $config,
-            $logger,
-            $eventDispatcher
-        );
+        if ( ! isset($addJob)) {
+            $addJob = m::mock(AddJob::class)
+                ->shouldReceive('add')
+                ->andReturn(self::JOB_ID)
+                ->getMock();
+        }
+
+        $p = new Producer($config, $eventDispatcher, $addJob);
 
         return $p;
     }
