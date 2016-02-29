@@ -22,6 +22,11 @@ disqontrol:
 
     # Defaults for all queues. Each queue can set its own values, too.
     queue_defaults:
+        # How many times a failed job should be retried before we give up
+        # and move it to a failure queue (a dead letter queue).
+        # Default value: 25
+        max_retries: 25
+
         # Where should completely failed jobs go?
         # Default value: 'failed-jobs'
         failure_queue: 'failed-jobs'
