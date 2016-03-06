@@ -10,19 +10,13 @@
 
 namespace Disqontrol\Producer;
 
+use Disqontrol\Disque\AddJob;
 use Disqontrol\Event\JobAddBeforeEvent;
 use Disqontrol\Event\JobAddAfterEvent;
 use Disqontrol\Event\Events;
 use Disqontrol\Job\JobInterface;
 use Disqontrol\Configuration\Configuration;
-use Disqontrol\Job\Marshaller\MarshallerInterface;
-use Disqontrol\Logger\JobLogger;
-use Disqontrol\Logger\MessageFormatter;
-use Disque\Client;
-use Disque\Connection\Response\ResponseException;
-use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use RuntimeException;
 
 /**
  * Producer sends jobs to the queue
@@ -31,23 +25,6 @@ use RuntimeException;
  */
 class Producer implements ProducerInterface
 {
-    /**
-     * @var string Constants for the disque-php method Client::AddJob()
-     */
-    const DISQUE_ADDJOB_DELAY = 'delay';
-    const DISQUE_ADDJOB_JOB_PROCESS_TIMEOUT = 'retry';
-    const DISQUE_ADDJOB_JOB_LIFETIME = 'ttl';
-
-    /**
-     * @var Client A client for communicating with Disque
-     */
-    private $disque;
-
-    /**
-     * @var MarshallerInterface Serializer for the job body
-     */
-    private $marshaller;
-
     /**
      * @var Configuration
      */
@@ -59,29 +36,23 @@ class Producer implements ProducerInterface
     private $eventDispatcher;
 
     /**
-     * @var LoggerInterface
+     * @var AddJob
      */
-    private $logger;
+    private $addJob;
 
     /**
-     * @param Client                   $disque
-     * @param MarshallerInterface      $marshaller
      * @param Configuration            $config
-     * @param LoggerInterface          $logger
      * @param EventDispatcherInterface $eventDispatcher
+     * @param AddJob                 $jobAdder
      */
     public function __construct(
-        Client $disque,
-        MarshallerInterface $marshaller,
         Configuration $config,
-        LoggerInterface $logger,
-        EventDispatcherInterface $eventDispatcher
+        EventDispatcherInterface $eventDispatcher,
+        AddJob $jobAdder
     ) {
-        $this->disque = $disque;
-        $this->marshaller = $marshaller;
         $this->config = $config;
-        $this->logger = $logger;
         $this->eventDispatcher = $eventDispatcher;
+        $this->addJob = $jobAdder;
     }
 
     /**
@@ -104,7 +75,7 @@ class Producer implements ProducerInterface
 
         // Read the Disque call arguments back from the event so that event
         // listeners can change them.
-        $jobId = $this->doAdd(
+        $jobId = $this->addJob->add(
             $job,
             $preAddEvent->getDelay(),
             $preAddEvent->getJobProcessTimeout(),
@@ -125,56 +96,4 @@ class Producer implements ProducerInterface
         return $result;
     }
 
-    /**
-     * Send a job to Disque
-     *
-     * @param JobInterface $job               The job to add
-     * @param int          $delay             Job delay in seconds
-     * @param int          $jobProcessTimeout Maximum job process time
-     * @param int          $jobLifetime       Maximum job lifetime
-     *
-     * @return string|bool Job ID The ID assigned to the job by Disque, or false
-     */
-    private function doAdd(
-        JobInterface $job,
-        $delay,
-        $jobProcessTimeout,
-        $jobLifetime
-    ) {
-        $options = [
-            self::DISQUE_ADDJOB_DELAY => $delay,
-            self::DISQUE_ADDJOB_JOB_PROCESS_TIMEOUT => $jobProcessTimeout,
-            self::DISQUE_ADDJOB_JOB_LIFETIME => $jobLifetime
-        ];
-
-        try {
-            $jobBody = $this->marshaller->marshal($job->getBodyWithMetadata());
-        } catch (RuntimeException $e) {
-            $this->logger->error($e->getMessage());
-
-            return false;
-        }
-
-        $queue = $job->getQueue();
-
-        try {
-            $jobId = $this->disque->addJob(
-                $queue,
-                $jobBody,
-                $options
-            );
-
-            $this->logger->info(
-                MessageFormatter::jobAdded($jobId, $queue)
-            );
-
-        } catch (ResponseException $e) {
-            $jobId = false;
-
-            $context[JobLogger::JOB_INDEX] = $job;
-            $this->logger->error($e->getMessage(), $context);
-        }
-
-        return $jobId;
-    }
 }
