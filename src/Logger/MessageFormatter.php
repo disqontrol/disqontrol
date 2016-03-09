@@ -21,6 +21,9 @@ class MessageFormatter
      */
     const JOB_DETAILS = 'Job %s body: %s';
     const JOB_ADDED = 'Added a job %s to the queue "%s"';
+    const JOB_PROCESS_FAILURE = 'Failed to process job %s from queue "%s". %s';
+    const JOB_PROCESSED = 'Job %s from the queue "%s" was successfully processed.';
+    const JOB_FAILED_COMPLETELY = 'Failed to process job %s from queue "%s" %i times, moved to the failure queue "%s". %s';
     const FAILED_TO_MOVE_JOB_TO_FAILURE_QUEUE = 'Failed to move job %s from queue "%s" to its failure queue "%s". The job is lost.';
 
     /**
@@ -31,16 +34,26 @@ class MessageFormatter
     const FAILED_DESERIALIZE_JOB_BODY = 'Failed to deserialize job body. %s';
 
     /**
+     * Helper template
+     */
+    const TWO_JOB_IDS = '%s (now %s)';
+
+    /**
      * Format a message with job details
      *
      * @param string $jobId
      * @param string $serializedJobBody
+     * @param string $originalJobId
      *
      * @return string A message containing job details
      */
-    public static function jobDetails($jobId, $serializedJobBody)
+    public static function jobDetails($jobId, $serializedJobBody, $originalJobId = '')
     {
-        return sprintf(self::JOB_DETAILS, $jobId, $serializedJobBody);
+        return sprintf(
+            self::JOB_DETAILS,
+            self::formatJobId($jobId, $originalJobId),
+            $serializedJobBody
+        );
     }
 
     /**
@@ -48,12 +61,17 @@ class MessageFormatter
      *
      * @param string $jobId
      * @param string $queue
+     * @param string $originalJobId
      *
      * @return string A message about the added job
      */
-    public static function jobAdded($jobId, $queue)
+    public static function jobAdded($jobId, $queue, $originalJobId = '')
     {
-        return sprintf(self::JOB_ADDED, $jobId, $queue);
+        return sprintf(
+            self::JOB_ADDED,
+            self::formatJobId($jobId, $originalJobId),
+            $queue
+        );
     }
 
     /**
@@ -91,6 +109,68 @@ class MessageFormatter
     }
 
     /**
+     * Failed to process a job
+     *
+     * @param string $jobId
+     * @param string $queue
+     * @param string $message
+     * @param string $originalJobId
+     *
+     * @return string
+     */
+    public static function failedProcessJob($jobId, $queue, $message, $originalJobId = '')
+    {
+        return sprintf(
+            self::JOB_PROCESS_FAILURE,
+            self::formatJobId($jobId, $originalJobId),
+            $queue,
+            $message
+        );
+    }
+
+    /**
+     * Job failed too many times, moved to the failure queue
+     *
+     * @param string $jobId
+     * @param string $queue
+     * @param int    $retryCount   How many times the job was retried
+     * @param string $failureQueue Where the job has been moved
+     * @param string $message
+     * @param string $originalJobId
+     *
+     * @return string
+     */
+    public static function givenUpOnJob($jobId, $queue, $retryCount, $failureQueue, $message, $originalJobId = '')
+    {
+        return sprintf(
+            self::JOB_FAILED_COMPLETELY,
+            self::formatJobId($jobId, $originalJobId),
+            $queue,
+            $retryCount,
+            $failureQueue,
+            $message
+        );
+    }
+
+    /**
+     * Job was successfully processed
+     *
+     * @param string $jobId
+     * @param string $queue
+     * @param string $originalJobId
+     *
+     * @return string
+     */
+    public static function jobProcessed($jobId, $queue, $originalJobId = '')
+    {
+        return sprintf(
+            self::JOB_PROCESSED,
+            self::formatJobId($jobId, $originalJobId),
+            $queue
+        );
+    }
+
+    /**
      * Failed to move the job to its failure queue. The job is lost.
      *
      * @param string $jobId
@@ -99,15 +179,41 @@ class MessageFormatter
      *
      * @return string
      */
-    public static function failedToMoveJobToFailureQueue($jobId, $queue, $failureQueue)
+    public static function failedToMoveJobToFailureQueue($jobId, $queue, $failureQueue, $originalJobId = '')
     {
         return sprintf(
             self::FAILED_TO_MOVE_JOB_TO_FAILURE_QUEUE,
-            $jobId,
+            self::formatJobId($jobId, $originalJobId),
             $queue,
             $failureQueue
         );
     }
+
+
+    /**
+     * Format a job ID for the log message
+     *
+     * Because of a missing Disque functionality, jobs can change their IDs.
+     * @see explanation for Disqontrol\Job\Job::KEY_ORIGINAL_ID
+     * In that case we want to log both the original as well as the current ID.
+     *
+     * This method takes care of formatting the ID (or IDs) for all messages.
+     * It is written in such a way that if Disque ever starts supporting the
+     * missing features and jobs retain their IDs, all method signatures can
+     * stay the same and the log messages will automatically start showing just
+     * the one ID as intended.
+     *
+     * @param string $currentJobId
+     * @param string $originalJobId
+     *
+     * @return string
+     */
+    private static function formatJobId($currentJobId, $originalJobId = '')
+    {
+        if (empty($originalJobId) or $currentJobId === $originalJobId) {
+            return $currentJobId;
+        }
+
+        return sprintf(self::TWO_JOB_IDS, $originalJobId, $currentJobId);
+    }
 }
-
-
