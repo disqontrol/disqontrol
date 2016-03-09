@@ -46,6 +46,9 @@ class Job extends BaseJob implements JobInterface
      */
     const KEY_RETRIES = 'retries';
     const KEY_ORIGINAL_ID = 'original-id';
+    const KEY_CREATION_TIME = 'creation-time';
+    const KEY_JOB_LIFETIME = 'job-lifetime';
+    const KEY_PROCESS_TIMEOUT = 'process-timeout';
 
     /**
      * This is a stricter constructor requiring both the job body and its queue
@@ -142,27 +145,6 @@ class Job extends BaseJob implements JobInterface
     }
     
     /**
-     * Check if the incoming job body is our body with metadata
-     *
-     * For a description of a job with metadata
-     * @see JobInterface
-     *
-     * @param mixed $body
-     *
-     * @return bool
-     */
-    private function isBodyWithMetadata($body)
-    {
-        if (is_array($body) and count($body) === 2
-            and array_key_exists(self::KEY_BODY, $body)
-            and array_key_exists(self::KEY_METADATA, $body)) {
-            return true;
-        }
-        
-        return false;
-    }
-
-    /**
      * {@inheritdoc}
      */
     public function getRetryCount()
@@ -204,5 +186,73 @@ class Job extends BaseJob implements JobInterface
     {
         $this->setMetadata(self::KEY_ORIGINAL_ID, $originalJobId);
     }
-    
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getCreationTime()
+    {
+        return $this->getMetadata(self::KEY_CREATION_TIME);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setCreationTime($creationTime)
+    {
+        $this->setMetadata(self::KEY_CREATION_TIME, $creationTime);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getJobLifetime()
+    {
+        return $this->getMetadata(self::KEY_JOB_LIFETIME);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setJobLifetime($lifetime)
+    {
+        $this->setMetadata(self::KEY_JOB_LIFETIME, $lifetime);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getProcessTimeout()
+    {
+        return $this->getMetadata(self::KEY_PROCESS_TIMEOUT);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setProcessTimeout($timeout)
+    {
+        $this->setMetadata(self::KEY_PROCESS_TIMEOUT, $timeout);
+    }
+
+    /**
+     * Check if the incoming job body is our body with metadata
+     *
+     * For a description of a job with metadata
+     * @see JobInterface
+     *
+     * @param mixed $body
+     *
+     * @return bool
+     */
+    private function isBodyWithMetadata($body)
+    {
+        if (is_array($body) and count($body) === 2
+            and array_key_exists(self::KEY_BODY, $body)
+            and array_key_exists(self::KEY_METADATA, $body)) {
+            return true;
+        }
+
+        return false;
+    }
 }

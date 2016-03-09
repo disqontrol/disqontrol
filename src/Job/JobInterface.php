@@ -138,4 +138,53 @@ interface JobInterface extends DisquePhpJobInterface
      * @param string $originalJobId
      */
     public function setOriginalId($originalJobId);
+
+    /**
+     * Get the timestamp of the moment the job was created
+     *
+     * This is used together with the job lifetime to determine if a failed job
+     * can be retried or if it should be moved to the failure queue.
+     *
+     * @return int|null
+     */
+    public function getCreationTime();
+
+    /**
+     * Set the time the job was created - in UNIX timestamp
+     *
+     * @param int $creationTime The timestamp of the moment the job was created
+     */
+    public function setCreationTime($creationTime);
+
+    /**
+     * Get the job lifetime as set when creating the job for the first time
+     *
+     * Name in Disque: TTL
+     *
+     * @return int|null Job lifetime in seconds
+     */
+    public function getJobLifetime();
+
+    /**
+     * Set the job lifetime
+     *
+     * @param int $lifetime
+     */
+    public function setJobLifetime($lifetime);
+
+    /**
+     * Get the process timeout
+     *
+     * Name in Disque: RETRY
+     *
+     * @return int|null Timeout in seconds
+     */
+    public function getProcessTimeout();
+
+    /**
+     * Set the process timeout
+     *
+     * @param int $timeout
+     */
+    public function setProcessTimeout($timeout);
 }

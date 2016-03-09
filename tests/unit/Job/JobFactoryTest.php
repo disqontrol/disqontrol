@@ -36,12 +36,17 @@ class JobFactoryTest extends \PHPUnit_Framework_TestCase {
 
         $job = new Job($body, $queue, $id, $nacks, $additionalDeliveries);
 
+        $lifetime = 123;
+        $job->setJobLifetime($lifetime);
+
         $newJob = $this->factory->cloneFailedJob($job);
 
         $this->assertSame($body, $newJob->getBody());
         $this->assertSame($queue, $newJob->getQueue());
         $this->assertSame($id, $newJob->getOriginalId());
+        $this->assertSame($lifetime, $newJob->getJobLifetime());
         $this->assertNull($newJob->getId());
+
         $totalRetries = $nacks + $additionalDeliveries + 1;
         $this->assertSame($totalRetries, $newJob->getRetryCount());
     }

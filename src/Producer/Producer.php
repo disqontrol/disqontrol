@@ -64,22 +64,22 @@ class Producer implements ProducerInterface
         $jobProcessTimeout = $this->config->getJobProcessTimeout($queue);
         $jobLifetime = $this->config->getJobLifetime($queue);
 
+        // Set the initial metadata to the new job
+        $job->setCreationTime(time());
+        $job->setJobLifetime($jobLifetime);
+        $job->setProcessTimeout($jobProcessTimeout);
+
         // Dispatch a pre-add event
-        $preAddEvent = new JobAddBeforeEvent(
-            $job,
-            $delay,
-            $jobProcessTimeout,
-            $jobLifetime
-        );
+        $preAddEvent = new JobAddBeforeEvent($job, $delay);
         $this->eventDispatcher->dispatch(Events::JOB_ADD_BEFORE, $preAddEvent);
 
-        // Read the Disque call arguments back from the event so that event
-        // listeners can change them.
+        // Read the Disque call arguments back from the job and the event so
+        // that event listeners can change them.
         $jobId = $this->addJob->add(
             $job,
             $preAddEvent->getDelay(),
-            $preAddEvent->getJobProcessTimeout(),
-            $preAddEvent->getJobLifetime()
+            $job->getProcessTimeout(),
+            $job->getJobLifetime()
         );
 
         if ($jobId !== false) {
