@@ -78,7 +78,18 @@ class ProducerTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($result);
     }
 
-    private function createProducer($addJob = null) {
+    public function testProducerSetsJobMetadata()
+    {
+        $job = new Job('body', 'queue');
+        $producer = $this->createProducer();
+
+        $this->assertNull($job->getJobLifetime());
+        $producer->add($job);
+        $this->assertSame(self::JOB_LIFETIME, $job->getJobLifetime());
+    }
+
+    private function createProducer($addJob = null)
+    {
         $config = m::mock(Configuration::class)
             ->shouldReceive('getJobProcessTimeout')
             ->andReturn(self::JOB_PROCESS_TIMEOUT)

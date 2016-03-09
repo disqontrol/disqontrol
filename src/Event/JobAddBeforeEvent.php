@@ -15,10 +15,10 @@ use Disqontrol\Job\JobInterface;
 /**
  * Information about the JOB_ADD_BEFORE event
  *
- * Dispatched from Producer before adding a job.
+ * Dispatched from Producer before adding a new job.
  * Any changes to the properties in this event will reflect back
- * in the producer. If you change the job queue or the delay, the job will be
- * enqueued with the new values.
+ * in the producer. If you change the job properties or the delay, the job will
+ * be enqueued with the new values.
  *
  * @author Martin Schlemmer
  */
@@ -35,31 +35,12 @@ class JobAddBeforeEvent extends Event
     protected $delay;
 
     /**
-     * @var int Maximum job process time in seconds
-     */
-    protected $jobProcessTimeout;
-
-    /**
-     * @var int Maximum job lifetime in seconds
-     */
-    protected $jobLifetime;
-
-    /**
      * @param JobInterface $job
      * @param int          $delay
-     * @param int          $jobProcessTimeout
-     * @param int          $jobLifetime
      */
-    public function __construct(
-        JobInterface $job,
-        $delay,
-        $jobProcessTimeout,
-        $jobLifetime
-    ) {
+    public function __construct(JobInterface $job, $delay) {
         $this->job = $job;
         $this->setDelay($delay);
-        $this->setJobProcessTimeout($jobProcessTimeout);
-        $this->setJobLifetime($jobLifetime);
     }
 
     /**
@@ -90,45 +71,5 @@ class JobAddBeforeEvent extends Event
     public function setDelay($delay)
     {
         $this->delay = (int) $delay;
-    }
-
-    /**
-     * Get the job max process time
-     *
-     * @return int
-     */
-    public function getJobProcessTimeout()
-    {
-        return $this->jobProcessTimeout;
-    }
-
-    /**
-     * Set the job max process time
-     *
-     * @param int $jobProcessTimeout
-     */
-    public function setJobProcessTimeout($jobProcessTimeout)
-    {
-        $this->jobProcessTimeout = (int) $jobProcessTimeout;
-    }
-
-    /**
-     * Get the job max lifetime
-     *
-     * @return int
-     */
-    public function getJobLifetime()
-    {
-        return $this->jobLifetime;
-    }
-
-    /**
-     * Set the job max lifetime
-     *
-     * @param int $jobLifetime
-     */
-    public function setJobLifetime($jobLifetime)
-    {
-        $this->jobLifetime = (int) $jobLifetime;
     }
 }
