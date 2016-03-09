@@ -21,6 +21,7 @@ class MessageFormatter
      */
     const JOB_DETAILS = 'Job %s body: %s';
     const JOB_ADDED = 'Added a job %s to the queue "%s"';
+    const FAILED_TO_MOVE_JOB_TO_FAILURE_QUEUE = 'Failed to move job %s from queue "%s" to its failure queue "%s". The job is lost.';
 
     /**
      * Exception messages
@@ -87,6 +88,25 @@ class MessageFormatter
     public static function failedDeserialize($message)
     {
         return sprintf(self::FAILED_DESERIALIZE_JOB_BODY, $message);
+    }
+
+    /**
+     * Failed to move the job to its failure queue. The job is lost.
+     *
+     * @param string $jobId
+     * @param string $queue
+     * @param string $failureQueue
+     *
+     * @return string
+     */
+    public static function failedToMoveJobToFailureQueue($jobId, $queue, $failureQueue)
+    {
+        return sprintf(
+            self::FAILED_TO_MOVE_JOB_TO_FAILURE_QUEUE,
+            $jobId,
+            $queue,
+            $failureQueue
+        );
     }
 }
 
