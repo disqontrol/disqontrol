@@ -13,9 +13,10 @@ namespace Disqontrol\Disque;
 use Disqontrol\Configuration\Configuration;
 use Disqontrol\Job\JobFactory;
 use Disqontrol\Job\JobInterface;
-use Disqontrol\Logger\MessageFormatter;
+use Disqontrol\Logger\MessageFormatter as msg;
 use Disque\Client;
 use Psr\Log\LoggerInterface;
+use Exception;
 
 /**
  * This class contains various methods for handling a failed job
@@ -30,14 +31,15 @@ use Psr\Log\LoggerInterface;
  *
  * As of 03/2016 it's not possible to delay a NACK or move a job to another queue
  * in Disque. We simulate these commands until they're implemented natively and
- * hide the implementation behind method calls.
+ * we hide the implementation behind method calls.
  *
  * @see https://github.com/antirez/disque/issues/170
  *      https://github.com/antirez/disque/issues/174
  *
  * @author Martin Schlemmer
  */
-class FailJob {
+class FailJob
+{
     /**
      * The Disque client for the manipulation of jobs
      *
@@ -89,6 +91,16 @@ class FailJob {
     }
 
     /**
+     * NACK the job with or without delay
+     *
+     * This method does three things.
+     * 1. It NACKs the job, which means it tells Disque that the job failed
+     *    and it should be requeued immediately.
+     * 2. It can also NACK a job with a delay.
+     * 3. And if the job's lifetime is up, it moves the job to its failure queue
+     *    instead of NACKing it. Thus no job stays in the queue longer than
+     *    the client wishes it to stay.
+     *
      * @param JobInterface $job
      * @param int          $delay in seconds
      *
@@ -96,47 +108,56 @@ class FailJob {
      */
     public function nack(JobInterface $job, $delay = 0)
     {
-        if ($delay === 0) {
-            $this->disque->nack($job->getId());
-            return;
-        }
-
-        $lifetime = $this->calculateRequeuedJobLifetime($job);
+        $remainingLifetime = $this->calculateRemainingLifetime($job);
 
         // The time for this job is up. No more retries
-        if ($lifetime <= $delay or $lifetime <= 0) {
+        if ($remainingLifetime <= $delay or $remainingLifetime <= 0) {
+
             return $this->moveToFailureQueue($job);
         }
 
-        // Return back to the same queue
-        $queue = $job->getQueue();
+        if ($delay === 0) {
 
-        return $this->move($job, $lifetime, $queue, $delay);
+            return $this->nackImmediately($job);
+        }
 
+        return $this->nackWithDelay($job, $delay);
     }
 
+    /**
+     * Move the job to its failure queue
+     *
+     * @param JobInterface $job
+     *
+     * @return bool
+     */
     public function moveToFailureQueue(JobInterface $job)
     {
         $queue = $job->getQueue();
         $failureQueue = $this->config->getFailureQueue($queue);
+        $lifetime = Configuration::MAX_ALLOWED_JOB_LIFETIME;
         $delay = 0;
-        $result = $this->move(
-            $job,
-            Configuration::MAX_ALLOWED_JOB_LIFETIME,
-            $failureQueue,
-            $delay
-        );
 
-        // This is a critical error, we have lost the job
-        if ($result === false) {
+        $movedToFailureQueue = $this->move($job, $lifetime, $failureQueue, $delay);
+
+        $jobId = $job->getId();
+        $originalId = $job->getOriginalId();
+
+        // This is a critical error. Not only has the job failed, we could not
+        // move it to the failure queue. It's ACKed in its original queue and
+        // doesn't exist in the failure queue. The job is lost.
+        if ($movedToFailureQueue === false) {
             $this->logger->critical(
-                MessageFormatter::failedToMoveJobToFailureQueue(
-                    $job->getId(),
-                    $queue,
-                    $failureQueue
-                )
+                msg::failedToMoveJobToFailureQueue($jobId, $queue, $failureQueue, $originalId)
+            );
+
+        } else {
+            $this->logger->info(
+                msg::movedJobToFailureQueue($jobId, $queue, $failureQueue, $originalId)
             );
         }
+
+        return $movedToFailureQueue;
     }
 
     /**
@@ -149,27 +170,54 @@ class FailJob {
      *
      * @return bool
      */
-    private function move(
-        JobInterface $job,
-        $jobLifetime,
-        $newQueue,
-        $delay
-    ) {
+    private function move(JobInterface $job, $jobLifetime, $newQueue, $delay)
+    {
+        $jobId = $job->getId();
+
+        try {
+            // ACK the job in its original queue to remove it
+            $this->disque->ackJob($jobId);
+        } catch (Exception $e) {
+            // What should we do if the ACK fails? Should we go on, or stop?
+            // If we go on, the job will exist twice, once in the original
+            // queue (right now it is reserved), once in the new queue.
+            //
+            // What happens next depends on its lifetime and process timeout.
+            // It might be requeued and processed again if the process timeout
+            // comes sooner that the lifetime end.
+            // It might be removed, if the lifetime ends sooner than the process
+            // timeout.
+            //
+            // The worst case scenario in continuing is that the job exists
+            // in a new queue but it has been processed successfully in the old
+            // queue.
+            //
+            // The worst case scenario in stopping here is that the job
+            // disappears altogether.
+            //
+            // Based on this I think we should go on and move the job. It's less
+            // bad to have a job twice than to lose it altogether.
+            // Just log it so the inconsistency can be explained.
+            $this->logger->error(
+                msg::failedToRemoveJobFromSourceQueue($jobId, $job->getQueue(), $newQueue, $job->getOriginalId())
+            );
+        }
+
         // Create the job's copy
         $newJob = $this->jobFactory->cloneFailedJob($job);
 
         // Set the new queue
         $newJob->setQueue($newQueue);
 
-        // Use the original process timeout
+        // Always use the original process timeout
         $processTimeout = $job->getProcessTimeout();
 
         // Add the job copy to the new queue
-        return (bool) $this->addJob->add($newJob, $delay, $processTimeout, $jobLifetime);
+        return (bool)$this->addJob->add($newJob, $delay, $processTimeout, $jobLifetime);
     }
 
     /**
-     * Calculate the lifetime of a requeued job
+     * Calculate the remaining lifetime of a requeued job
      *
      * If a job is requeued, its new lifetime should be shorter by the difference
      * between now and its creation time
@@ -178,10 +226,77 @@ class FailJob {
      *
      * @return int The rest lifetime
      */
-    private function calculateRequeuedJobLifetime(JobInterface $job)
+    private function calculateRemainingLifetime(JobInterface $job)
     {
-        $newLifetime = $job->getCreationTime() + $job->getJobLifetime() - time();
-        return (int)$newLifetime;
+        $creationTime = $job->getCreationTime();
+        $jobLifetime = (int)$job->getJobLifetime();
+
+        if (empty($creationTime)) {
+            return $jobLifetime;
+        }
+
+        $remainingLifetime = $creationTime + $jobLifetime - time();
+
+        return $remainingLifetime;
+    }
+
+    /**
+     * NACK the job immediately
+     *
+     * @param JobInterface $job
+     *
+     * @return bool
+     */
+    private function nackImmediately(JobInterface $job)
+    {
+        $queue = $job->getQueue();
+        $jobId = $job->getId();
+        $originalId = $job->getOriginalId();
+
+        try {
+            $this->disque->nack($jobId);
+        } catch (Exception $e) {
+            $this->logger->error(
+                msg::failedToNack($jobId, $queue, $e->getMessage(), $job->getProcessTimeout(), $originalId)
+            );
+
+            return false;
+        }
+
+        $this->logger->info(msg::jobNacked($jobId, $queue, $originalId));
+
+        return true;
+    }
+
+    /**
+     * NACK the job with a delay
+     *
+     * @param JobInterface $job
+     * @param int          $delay in seconds
+     *
+     * @return bool
+     */
+    private function nackWithDelay(JobInterface $job, $delay)
+    {
+        $queue = $job->getQueue();
+        $remainingLifetime = $this->calculateRemainingLifetime($job);
+
+        // Return back to the same queue
+        $nackedWithDelay = $this->move($job, $remainingLifetime, $queue, $delay);
+
+        $jobId = $job->getId();
+        $originalId = $job->getOriginalId();
+
+        if ($nackedWithDelay === false) {
+            $message = '';
+            $this->logger->error(
+                msg::failedToNack($jobId, $queue, $message, $job->getProcessTimeout(), $originalId)
+            );
+        } else {
+            $this->logger->info(msg::jobNacked($jobId, $queue, $originalId));
+        }
+
+        return $nackedWithDelay;
     }
 
 }

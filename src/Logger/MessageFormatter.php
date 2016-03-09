@@ -22,9 +22,13 @@ class MessageFormatter
     const JOB_DETAILS = 'Job %s body: %s';
     const JOB_ADDED = 'Added a job %s to the queue "%s"';
     const JOB_PROCESS_FAILURE = 'Failed to process job %s from queue "%s". %s';
-    const JOB_PROCESSED = 'Job %s from the queue "%s" was successfully processed.';
+    const JOB_PROCESSED = 'Job %s from the queue "%s" was successfully processed';
     const JOB_FAILED_COMPLETELY = 'Failed to process job %s from queue "%s" %i times, moved to the failure queue "%s". %s';
-    const FAILED_TO_MOVE_JOB_TO_FAILURE_QUEUE = 'Failed to move job %s from queue "%s" to its failure queue "%s". The job is lost.';
+    const FAILED_TO_MOVE_JOB_TO_FAILURE_QUEUE = 'Failed to move job %s from queue "%s" to its failure queue "%s". The job is lost';
+    const FAILED_TO_NACK = 'Failed to NACK job %s in queue %s. %s. It will be requeued automatically after it times out (%is).';
+    const JOB_NACKED = 'NACKed job %s in queue %s';
+    const JOB_MOVED_TO_FAILURE_QUEUE = 'Moved job %s from queue "%s" to its failure queue "%s"';
+    const FAILED_TO_REMOVE_JOB_FROM_SOURCE_QUEUE = 'When moving job %s from queue "%s" to queue "%s", it couldn\'t be removed from the source queue. It might exist in both queues at once.';
 
     /**
      * Exception messages
@@ -69,6 +73,24 @@ class MessageFormatter
     {
         return sprintf(
             self::JOB_ADDED,
+            self::formatJobId($jobId, $originalJobId),
+            $queue
+        );
+    }
+
+    /**
+     * NACKed a job
+     *
+     * @param string $jobId
+     * @param string $queue
+     * @param string $originalJobId
+     *
+     * @return string A message about the added job
+     */
+    public static function jobNacked($jobId, $queue, $originalJobId = '')
+    {
+        return sprintf(
+            self::JOB_NACKED,
             self::formatJobId($jobId, $originalJobId),
             $queue
         );
@@ -129,7 +151,7 @@ class MessageFormatter
     }
 
     /**
-     * Job failed too many times, moved to the failure queue
+     * Job failed too many times, moving it to the failure queue
      *
      * @param string $jobId
      * @param string $queue
@@ -153,6 +175,25 @@ class MessageFormatter
     }
 
     /**
+     * Moved a job to its failure queue
+     *
+     * @param string $jobId
+     * @param string $queue
+     * @param string $failureQueue Where the job has been moved
+     * @param string $originalJobId
+     *
+     * @return string
+     */
+    public static function movedJobToFailureQueue($jobId, $queue, $failureQueue, $originalJobId = '')
+    {
+        return sprintf(
+            self::JOB_MOVED_TO_FAILURE_QUEUE,
+            self::formatJobId($jobId, $originalJobId),
+            $queue,
+            $failureQueue
+        );
+    }
+    /**
      * Job was successfully processed
      *
      * @param string $jobId
@@ -167,6 +208,28 @@ class MessageFormatter
             self::JOB_PROCESSED,
             self::formatJobId($jobId, $originalJobId),
             $queue
+        );
+    }
+
+    /**
+     * Failed to NACK a job
+     *
+     * @param string $jobId
+     * @param string $queue
+     * @param string $message
+     * @param int    $processTimeout
+     * @param string $originalJobId
+     *
+     * @return string
+     */
+    public static function failedToNack($jobId, $queue, $message, $processTimeout, $originalJobId = '')
+    {
+        return sprintf(
+            self::FAILED_TO_NACK,
+            self::formatJobId($jobId, $originalJobId),
+            $queue,
+            $message,
+            $processTimeout
         );
     }
 
@@ -186,6 +249,30 @@ class MessageFormatter
             self::formatJobId($jobId, $originalJobId),
             $queue,
             $failureQueue
+        );
+    }
+
+    /**
+     * Failed to remove job from the source queue when moving it
+     *
+     * @param string $jobId
+     * @param string $sourceQueue
+     * @param string $targetQueue
+     * @param string $originalJobId
+     *
+     * @return string
+     */
+    public static function failedToRemoveJobFromSourceQueue(
+        $jobId,
+        $sourceQueue,
+        $targetQueue,
+        $originalJobId = ''
+    ) {
+        return sprintf(
+            self::FAILED_TO_REMOVE_JOB_FROM_SOURCE_QUEUE,
+            self::formatJobId($jobId, $originalJobId),
+            $sourceQueue,
+            $targetQueue
         );
     }
 
