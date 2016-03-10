@@ -64,3 +64,12 @@ services:
             - '@configuration'
             - '@event_dispatcher'
             - '@add_job'
+
+    fail_job:
+        class: Disqontrol\Disque\FailJob
+        arguments:
+            - '@disque'
+            - '@add_job'
+            - '@job_factory'
+            - '@configuration'
+            - '@logger'
