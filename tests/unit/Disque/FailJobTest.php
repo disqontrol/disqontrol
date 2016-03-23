@@ -26,6 +26,8 @@ class FailJobTest extends \PHPUnit_Framework_TestCase
     // Lifetime must be higher than the delay
     const LIFETIME = 999;
     const PROCESS_TIMEOUT = 123;
+    const MAX_RETRIES = 10;
+    const RETRIES = 5;
     const FAILURE_QUEUE = 'failure_queue';
 
     public function tearDown()
@@ -128,11 +130,17 @@ class FailJobTest extends \PHPUnit_Framework_TestCase
             ->getMock();
         $addJob = m::mock(AddJob::class)
             ->shouldReceive('add')
+            ->with(m::on(function($job) {
+                return $job->getQueue() === self::FAILURE_QUEUE;
+            }), anything(), anything(), anything())
             ->once()
             ->getMock();
         $config = m::mock(Configuration::class)
             ->shouldReceive('getFailureQueue')
+            ->andReturn(self::FAILURE_QUEUE)
             ->once()
+            ->shouldReceive('getMaxRetries')
+            ->andReturn(self::MAX_RETRIES)
             ->getMock();
 
         $failJob = $this->createFailJob($disque, $addJob, $config);
@@ -152,16 +160,53 @@ class FailJobTest extends \PHPUnit_Framework_TestCase
             ->getMock();
         $addJob = m::mock(AddJob::class)
             ->shouldReceive('add')
+            ->with(m::on(function($job) {
+                return $job->getQueue() === self::FAILURE_QUEUE;
+            }), anything(), anything(), anything())
             ->once()
             ->getMock();
         $config = m::mock(Configuration::class)
             ->shouldReceive('getFailureQueue')
+            ->andReturn(self::FAILURE_QUEUE)
             ->once()
+            ->shouldReceive('getMaxRetries')
+            ->andReturn(self::MAX_RETRIES)
             ->getMock();
 
         $failJob = $this->createFailJob($disque, $addJob, $config);
 
         $failJob->nack($job, self::LIFETIME * 10);
+    }
+
+    public function testJobWithNoRetriesLeftMovesToFailureQueueInsteadOfNack()
+    {
+        $job = new Job('body', 'queue');
+        $job->setJobLifetime(self::LIFETIME);
+        $job->setPreviousRetryCount(self::RETRIES);
+
+        $disque = m::mock(Client::class)
+            ->shouldReceive('ackJob')
+            ->once()
+            ->getMock();
+        $addJob = m::mock(AddJob::class)
+            ->shouldReceive('add')
+            ->with(m::on(function($job) {
+                return $job->getQueue() === self::FAILURE_QUEUE;
+            }), anything(), anything(), anything())
+            ->once()
+            ->getMock();
+        $config = m::mock(Configuration::class)
+            ->shouldReceive('getFailureQueue')
+            ->andReturn(self::FAILURE_QUEUE)
+            ->once()
+            ->shouldReceive('getMaxRetries')
+            ->andReturn(self::RETRIES - 1)
+            ->getMock();
+
+        $failJob = $this->createFailJob($disque, $addJob, $config);
+
+        $failJob->nack($job, 0);
+
     }
 
     public function testMoveToFailureQueue()
@@ -276,9 +321,12 @@ class FailJobTest extends \PHPUnit_Framework_TestCase
         }
         $jobFactory = new JobFactory();
         if (is_null($config)) {
-            $config = $this->getMockBuilder(Configuration::class)
-                ->disableOriginalConstructor()
-                ->getMock();
+            $config = m::mock(Configuration::class)
+                ->shouldReceive('getFailureQueue')
+                ->andReturn(self::FAILURE_QUEUE)
+                ->shouldReceive('getMaxRetries')
+                ->andReturn(self::MAX_RETRIES)
+                ->mock();
         }
         if (is_null($logger)) {
             $logger = new NullLogger();

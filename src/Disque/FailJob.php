@@ -13,10 +13,11 @@ namespace Disqontrol\Disque;
 use Disqontrol\Configuration\Configuration;
 use Disqontrol\Job\JobFactory;
 use Disqontrol\Job\JobInterface;
-use Disqontrol\Logger\MessageFormatter as msg;
+use Disqontrol\Logger\MessageFormatter as Msg;
 use Disque\Client;
 use Psr\Log\LoggerInterface;
 use Exception;
+use Disqontrol\Logger\JobLogger;
 
 /**
  * This class contains various methods for handling a failed job
@@ -97,9 +98,9 @@ class FailJob
      * 1. It NACKs the job, which means it tells Disque that the job failed
      *    and it should be requeued immediately.
      * 2. It can also NACK a job with a delay.
-     * 3. And if the job's lifetime is up, it moves the job to its failure queue
-     *    instead of NACKing it. Thus no job stays in the queue longer than
-     *    the client wishes it to stay.
+     * 3. And if the job's lifetime is up or if it has no more retries left,
+     *    it moves the job to its failure queue instead of NACKing it. Thus no
+     *    job stays in the queue longer than the client wishes it to stay.
      *
      * @param JobInterface $job
      * @param int          $delay in seconds
@@ -108,10 +109,8 @@ class FailJob
      */
     public function nack(JobInterface $job, $delay = 0)
     {
-        $remainingLifetime = $this->calculateRemainingLifetime($job);
-
-        // The time for this job is up. No more retries
-        if ($remainingLifetime <= $delay or $remainingLifetime <= 0) {
+        if ($this->jobHasReachedRetryLimit($job) or
+            $this->jobLifetimeIsUp($job, $delay)) {
 
             return $this->moveToFailureQueue($job);
         }
@@ -148,16 +147,36 @@ class FailJob
         // doesn't exist in the failure queue. The job is lost.
         if ($movedToFailureQueue === false) {
             $this->logger->critical(
-                msg::failedToMoveJobToFailureQueue($jobId, $queue, $failureQueue, $originalId)
+                Msg::failedToMoveJobToFailureQueue($jobId, $queue, $failureQueue, $originalId)
             );
 
         } else {
             $this->logger->info(
-                msg::movedJobToFailureQueue($jobId, $queue, $failureQueue, $originalId)
+                Msg::movedJobToFailureQueue($jobId, $queue, $failureQueue, $originalId)
             );
         }
 
         return $movedToFailureQueue;
+    }
+
+    /**
+     * Log an error about a failed job
+     *
+     * @param JobInterface $job
+     * @param string       $errorMessage
+     */
+    public function logError(JobInterface $job, $errorMessage = '')
+    {
+        $context[JobLogger::JOB_INDEX] = $job;
+        $this->logger->error(
+            Msg::failedProcessJob(
+                $job->getId(),
+                $job->getQueue(),
+                $errorMessage,
+                $job->getOriginalId()
+            ),
+            $context
+        );
     }
 
     /**
@@ -199,7 +218,7 @@ class FailJob
             // bad to have a job twice than to lose it altogether.
             // Just log it so the inconsistency can be explained.
             $this->logger->error(
-                msg::failedToRemoveJobFromSourceQueue($jobId, $job->getQueue(), $newQueue, $job->getOriginalId())
+                Msg::failedToRemoveJobFromSourceQueue($jobId, $job->getQueue(), $newQueue, $job->getOriginalId())
             );
         }
 
@@ -241,6 +260,38 @@ class FailJob
     }
 
     /**
+     * Check if the job has reached its max retry limit
+     *
+     * @param JobInterface $job
+     *
+     * @return bool
+     */
+    private function jobHasReachedRetryLimit(JobInterface $job)
+    {
+        $queue = $job->getQueue();
+
+        $maxRetries = $this->config->getMaxRetries($queue);
+        $retryCount = $job->getRetryCount();
+
+        return $maxRetries <= $retryCount;
+    }
+
+    /**
+     * Check if the job still has a lifetime left or not
+     *
+     * @param JobInterface $job
+     * @param int          $delay Planned job delay
+     *
+     * @return bool True - the job is out of time for the next retry
+     */
+    private function jobLifetimeIsUp(JobInterface $job, $delay)
+    {
+        $remainingLifetime = $this->calculateRemainingLifetime($job);
+
+        return ($remainingLifetime <= $delay or $remainingLifetime <= 0);
+    }
+
+    /**
      * NACK the job immediately
      *
      * @param JobInterface $job
@@ -257,13 +308,13 @@ class FailJob
             $this->disque->nack($jobId);
         } catch (Exception $e) {
             $this->logger->error(
-                msg::failedToNack($jobId, $queue, $e->getMessage(), $job->getProcessTimeout(), $originalId)
+                Msg::failedToNack($jobId, $queue, $e->getMessage(), $job->getProcessTimeout(), $originalId)
             );
 
             return false;
         }
 
-        $this->logger->info(msg::jobNacked($jobId, $queue, $originalId));
+        $this->logger->info(Msg::jobNacked($jobId, $queue, $originalId));
 
         return true;
     }
@@ -290,10 +341,10 @@ class FailJob
         if ($nackedWithDelay === false) {
             $message = '';
             $this->logger->error(
-                msg::failedToNack($jobId, $queue, $message, $job->getProcessTimeout(), $originalId)
+                Msg::failedToNack($jobId, $queue, $message, $job->getProcessTimeout(), $originalId)
             );
         } else {
-            $this->logger->info(msg::jobNacked($jobId, $queue, $originalId));
+            $this->logger->info(Msg::jobNacked($jobId, $queue, $originalId));
         }
 
         return $nackedWithDelay;
