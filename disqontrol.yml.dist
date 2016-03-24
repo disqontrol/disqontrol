@@ -22,15 +22,6 @@ disqontrol:
 
     # Defaults for all queues. Each queue can set its own values, too.
     queue_defaults:
-        # How many times a failed job should be retried before we give up
-        # and move it to a failure queue (a dead letter queue).
-        # Default value: 25
-        max_retries: 25
-
-        # Where should completely failed jobs go?
-        # Default value: 'failed-jobs'
-        failure_queue: 'failed-jobs'
-
         # How long can a job be processed before timing out (in seconds)?
         # Default value: 600
         # Disque argument name: RETRY
@@ -58,6 +49,37 @@ disqontrol:
         # @see function generateJobID() in
         # https://github.com/antirez/disque/blob/master/src/job.c
         job_lifetime: 172800
+
+        # What failure strategy should be used for handling a failed job?
+        # Default value: retry
+        #
+        # Possible values:
+        # retry
+        # - Retry the failed job with an exponential backoff, ie. the job will
+        #   be returned to the queue with an ever longer delay
+        #
+        # retry_immediately
+        # - Retry the failed job immediately, until its time is up or the job
+        #   is out of allowed retries.
+        #
+        # log_and_throw_away
+        # - This failure strategy is internal and is used in synchronous mode,
+        #   where retrying doesn't make sense. Do not use it for your queues.
+        #
+        # If you want to write your own failure strategy, implement the interface
+        # Disqontrol\Dispatcher\Failure\FailureStrategyInterface and register
+        # the strategy during bootstrap with
+        # Disqontrol\Configuration\Configuration::addFailureStrategy()
+        failure_strategy: retry
+
+        # How many times a failed job should be retried before we give up
+        # and move it to a failure queue (a dead letter queue).
+        # Default value: 25
+        max_retries: 25
+
+        # Where should completely failed jobs go?
+        # Default value: 'failed-jobs'
+        failure_queue: 'failed-jobs'
 
     # Configuration of queues and their workers
     queues:
@@ -99,9 +121,11 @@ disqontrol:
                 cli: 'php console email:send'
 
             # You can override the queue defaults defined above
-            failure_queue: 'unsent-registration-emails'
             job_process_timeout: 10
             job_lifetime: 3600
+            failure_strategy: retry_immediately
+            max_retries: 5
+            failure_queue: 'unsent-registration-emails'
 
         # This is another queue
         'profile-update':
