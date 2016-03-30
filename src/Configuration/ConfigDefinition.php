@@ -40,6 +40,7 @@ class ConfigDefinition implements ConfigurationInterface
     const FAILURE_QUEUE = 'failure_queue';
     const JOB_PROCESS_TIMEOUT = 'job_process_timeout';
     const JOB_LIFETIME = 'job_lifetime';
+    const FAILURE_STRATEGY = 'failure_strategy';
 
     const QUEUES = 'queues';
 
@@ -59,6 +60,7 @@ class ConfigDefinition implements ConfigurationInterface
     const FAILURE_QUEUE_DEFAULT = 'failed-jobs';
     const JOB_PROCESS_TIMEOUT_DEFAULT = 600;
     const JOB_LIFETIME_DEFAULT = 172800;
+    const FAILURE_STRATEGY_DEFAULT = 'retry';
     const MIN_PROCESSES_DEFAULT = 2;
     const MAX_PROCESSES_DEFAULT = 5;
     const AUTOSCALE_DEFAULT = true;
@@ -156,6 +158,9 @@ class ConfigDefinition implements ConfigurationInterface
                     ->defaultValue(self::JOB_LIFETIME_DEFAULT)
                     ->min(0)
                     ->end()
+                ->scalarNode(self::FAILURE_STRATEGY)
+                    ->defaultValue(self::FAILURE_STRATEGY_DEFAULT)
+                    ->end()
             ->end();
 
         return $node;
@@ -178,6 +183,10 @@ class ConfigDefinition implements ConfigurationInterface
                 ->children()
                     ->append($this->addWorkerNode())
                     ->scalarNode(self::FAILURE_QUEUE)->end()
+                    ->scalarNode(self::FAILURE_STRATEGY)->end()
+                    ->integerNode(self::MAX_RETRIES)
+                        ->min(0)
+                    ->end()
                     ->integerNode(self::JOB_PROCESS_TIMEOUT)
                         ->min(0)
                     ->end()

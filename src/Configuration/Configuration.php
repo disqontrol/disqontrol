@@ -147,6 +147,18 @@ class Configuration
         return $this->getQueueParameterOrDefault($queue, Config::FAILURE_QUEUE);
     }
 
+    /**
+     * Get the name of the failure strategy for the given queue
+     *
+     * @param string $queue
+     *
+     * @return string Failure strategy name
+     */
+    public function getFailureStrategyName($queue)
+    {
+        return $this->getQueueParameterOrDefault($queue, Config::FAILURE_STRATEGY);
+    }
+
 
     /**
      * Get max job process time from the configuration for the given queue
