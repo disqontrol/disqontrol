@@ -10,6 +10,10 @@
 
 namespace Disqontrol\Job;
 
+use Disqontrol\Configuration\Configuration;
+use Psr\Log\LoggerInterface;
+use Disqontrol\Logger\MessageFormatter as Msg;
+
 /**
  * Create new jobs safely
  *
@@ -30,6 +34,22 @@ namespace Disqontrol\Job;
 class JobFactory
 {
     /**
+     * @var Configuration
+     */
+    private $config;
+
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    public function __construct(Configuration $config, LoggerInterface $logger)
+    {
+        $this->config = $config;
+        $this->logger = $logger;
+    }
+
+    /**
      * Create a new job that is supposed to be sent to Disque
      *
      * @param string $jobBody
@@ -39,7 +59,13 @@ class JobFactory
      */
     public function createNewJob($jobBody, $queue)
     {
-        return new Job($jobBody, $queue);
+        $job = new Job($jobBody, $queue);
+
+        if ($this->jobHasBeenAddedFromOutside($job)) {
+            $this->addMissingJobTimeData($job);
+        }
+
+        return $job;
     }
 
     /**
@@ -57,47 +83,62 @@ class JobFactory
         $jobId,
         $nacks,
         $additionalDeliveries
-    )
-    {
-        return new Job(
+    ) {
+        $job = new Job(
             $jobBody,
             $queue,
             $jobId,
             $nacks,
             $additionalDeliveries
         );
+
+        if ($this->jobHasBeenAddedFromOutside($job)) {
+            $this->addMissingJobTimeData($job);
+        }
+
+        return $job;
     }
 
     /**
-     * Create a clone of an existing job, remembering its ID and incrementing
-     * the retry count by 1
+     * Check if the job has been added from outside of Disqontrol
      *
-     * This is used to work around the limitations of Disque which cannot
-     * move jobs to a different queue, NACK them with a delay or change the job
-     * body.
-     *
-     * In all these situations, we create a new job and store the original job ID
-     * and the retry count in the job metadata.
-     *
-     * @see https://github.com/antirez/disque/issues/174
+     * Jobs added from the outside don't have time information - job creation
+     * time and job lifetime.
      *
      * @param JobInterface $job
      *
-     * @return JobInterface A new job ready to be inserted in Disque
+     * @return bool
      */
-    public function cloneFailedJob(JobInterface $job)
+    private function jobHasBeenAddedFromOutside(JobInterface $job)
     {
-        $body = $job->getBodyWithMetadata();
+        $jobHasNoLifetime = empty($job->getJobLifetime());
+        $jobHasNoCreationTime = empty($job->getCreationTime());
+
+        return ($jobHasNoLifetime and $jobHasNoCreationTime);
+    }
+
+    /**
+     * Add missing job lifetime and job creation time
+     *
+     * If the job has been added through other means than the Disqontrol
+     * producer, it is missing time metadata. Add it here.
+     *
+     * This is a mirror of the process in the producer
+     * @see Disqontrol\Producer\Producer::add()
+     *
+     * @param JobInterface $job
+     */
+    private function addMissingJobTimeData(JobInterface $job)
+    {
         $queue = $job->getQueue();
-        $newJob = $this->createNewJob($body, $queue);
+        $jobLifetime = $this->config->getJobLifetime($queue);
+        $creationTime = time();
 
-        $originalId = $job->getOriginalId();
-        $newJob->setOriginalId($originalId);
+        $job->setCreationTime($creationTime);
+        $job->setJobLifetime($jobLifetime);
 
-        // Because this is a failed job, increment the retry count right here
-        $retryCount = $job->getRetryCount() + 1;
-        $newJob->setPreviousRetryCount($retryCount);
-
-        return $newJob;
+        $this->logger->debug(
+            Msg::addedJobTimeData($job->getId(), $creationTime, $jobLifetime, $job->getOriginalId())
+        );
     }
 }

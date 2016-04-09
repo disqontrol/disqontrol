@@ -208,6 +208,9 @@ final class Disqontrol
 
         $loader = new YamlFileLoader($container, new FileLocator($this->getConfigDir()));
         $loader->load(self::SERVICES_FILE);
+        $container->addResource(
+            new FileResource($this->getConfigDir() . '/' . self::SERVICES_FILE)
+        );
 
         $container->addCompilerPass(new ConsoleCommandsCompilerPass());
         $container->addCompilerPass(new FailureStrategiesCompilerPass());
@@ -309,7 +312,7 @@ final class Disqontrol
      */
     private function prepareLogger()
     {
-        $logger = $this->container->get('logger');
+        $logger = $this->container->get('monolog_logger');
         $streamHandler = new StreamHandler($this->getLogDir() . '/disqontrol.log', Logger::DEBUG);
         $logger->getMonologLogger()->pushHandler($streamHandler);
     }

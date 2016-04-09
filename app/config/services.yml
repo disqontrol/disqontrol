@@ -41,6 +41,9 @@ services:
 
     job_factory:
         class: Disqontrol\Job\JobFactory
+        arguments:
+            - '@configuration'
+            - '@logger'
 
     job_serializer:
         class: Disqontrol\Job\Serializer\JsonSerializer
@@ -159,3 +162,25 @@ services:
         class: Disqontrol\Dispatcher\Failure\LogAndThrowAway
         arguments:
             - '@logger'
+
+    consumer:
+        class: Disqontrol\Consumer\Consumer
+        arguments:
+            - '@disque'
+            - '@job_marshaller'
+            - '@job_dispatcher'
+            - '@process_control'
+            - '@job_serializer'
+            - '@logger'
+
+    consumer_command:
+        class: Disqontrol\Console\Command\ConsumerCommand
+        arguments:
+            - '@configuration'
+            - '@consumer'
+            - '@process_control'
+        tags:
+            - { name: disqontrol.command }
+
+    process_control:
+        class: Disqontrol\ProcessControl\ProcessControl

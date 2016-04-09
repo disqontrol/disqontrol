@@ -30,6 +30,7 @@ class MessageFormatter
     const JOB_MOVED_TO_FAILURE_QUEUE = 'Moved job %s from queue "%s" to its failure queue "%s"';
     const FAILED_TO_REMOVE_JOB_FROM_SOURCE_QUEUE = 'When moving job %s from queue "%s" to queue "%s", it couldn\'t be removed from the source queue. It might exist in both queues at once.';
     const FAILED_TO_ACK = 'Failed to ACK job %s in queue %s. %s. It will be processed again after it times out.';
+    const FAILED_TO_UNMARSHAL_JOB = 'Failed to unmarshal job coming from Disque. Job data: %s';
 
     /**
      * Exception messages
@@ -325,6 +326,18 @@ class MessageFormatter
             $queue,
             $message
         );
+    }
+
+    /**
+     * Failed to unmarshal job data coming from Disque
+     *
+     * @param string $jobData
+     *
+     * @return string
+     */
+    public static function failedToUnmarshalJob($jobData)
+    {
+        return sprintf(self::FAILED_TO_UNMARSHAL_JOB, $jobData);
     }
 
     /**

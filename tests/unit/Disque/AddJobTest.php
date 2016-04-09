@@ -18,6 +18,7 @@ use Disqontrol\Job\JobFactory;
 use Disque\Client;
 use Psr\Log\NullLogger;
 use Disque\Connection\Response\ResponseException;
+use Disqontrol\Test\Helper\JobFactoryCreator;
 
 class AddJobTest extends \PHPUnit_Framework_TestCase
 {
@@ -74,7 +75,7 @@ class AddJobTest extends \PHPUnit_Framework_TestCase
                 ->getMock();
         }
 
-        $jobFactory = new JobFactory();
+        $jobFactory = JobFactoryCreator::create();
         $serializer = new JsonSerializer();
         $jobMarshaller = new JobMarshaller($jobFactory, $serializer);
 

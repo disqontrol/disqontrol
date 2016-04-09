@@ -18,6 +18,7 @@ use Psr\Log\NullLogger;
 use Mockery as m;
 use Psr\Log\LoggerInterface;
 use Exception;
+use Disqontrol\Test\Helper\JobFactoryCreator;
 
 class FailJobTest extends \PHPUnit_Framework_TestCase
 {
@@ -319,7 +320,7 @@ class FailJobTest extends \PHPUnit_Framework_TestCase
                 ->disableOriginalConstructor()
                 ->getMock();
         }
-        $jobFactory = new JobFactory();
+        $jobFactory = JobFactoryCreator::create();
         if (is_null($config)) {
             $config = m::mock(Configuration::class)
                 ->shouldReceive('getFailureQueue')

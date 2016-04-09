@@ -59,6 +59,7 @@ class DisqueClientFactory
     {
         $credentials = $this->getCredentials();
         $this->disque = new Client($credentials);
+        $this->disque->connect();
     }
 
     /**
@@ -70,7 +71,7 @@ class DisqueClientFactory
     {
         $credentials = [];
         foreach ($this->config->getDisqueConfig() as $credentialsConfig) {
-            $result[] = new Credentials(
+            $credentials[] = new Credentials(
                 $credentialsConfig[ConfigDefinition::HOST],
                 $credentialsConfig[ConfigDefinition::PORT],
                 $credentialsConfig[ConfigDefinition::PASSWORD],

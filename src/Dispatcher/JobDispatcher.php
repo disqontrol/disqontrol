@@ -11,7 +11,6 @@
 namespace Disqontrol\Dispatcher;
 
 use Disqontrol\Dispatcher\Failure\FailureStrategyCollection;
-use Disqontrol\Disque\FailJob;
 use Disqontrol\Logger\JobLogger;
 use Disqontrol\Logger\MessageFormatter;
 use Disqontrol\Job\JobInterface;
@@ -134,6 +133,12 @@ class JobDispatcher implements JobDispatcherInterface
         $this->callWorkers($calls);
     }
 
+    /**
+     * {@inheritdoc}
+     *
+     * The job dispatcher will gracefully stop what it's doing and exit.
+     * @see JobDispatcher::startCalls()
+     */
     public function terminate()
     {
         $this->mustTerminate = true;
