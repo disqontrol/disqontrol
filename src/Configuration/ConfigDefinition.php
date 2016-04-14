@@ -61,7 +61,7 @@ class ConfigDefinition implements ConfigurationInterface
     const JOB_PROCESS_TIMEOUT_DEFAULT = 600;
     const JOB_LIFETIME_DEFAULT = 172800;
     const FAILURE_STRATEGY_DEFAULT = 'retry';
-    const MIN_PROCESSES_DEFAULT = 2;
+    const MIN_PROCESSES_DEFAULT = 1;
     const MAX_PROCESSES_DEFAULT = 5;
     const AUTOSCALE_DEFAULT = true;
     const JOB_BATCH_DEFAULT = 10;
@@ -79,6 +79,7 @@ class ConfigDefinition implements ConfigurationInterface
         $rootNode
             ->children()
                 ->arrayNode(self::DISQONTROL)
+                    ->normalizeKeys(false)
                     ->children()
                         ->scalarNode(self::LOG_DIR)
                             ->defaultValue(self::LOG_DIR_DEFAULT)
@@ -179,6 +180,7 @@ class ConfigDefinition implements ConfigurationInterface
         $node
             ->isRequired()
             ->requiresAtLeastOneElement()
+            ->normalizeKeys(false)
             ->prototype('array')
                 ->children()
                     ->append($this->addWorkerNode())

@@ -35,13 +35,25 @@ class Configuration
     private $config;
 
     /**
-     * @param array $configArray
+     * Queues in consumer configuration that are undefined in queues config
+     *
+     * @var array
      */
-    public function __construct(array $configArray)
+    private $undefinedQueues;
+
+    /**
+     * @param array $config
+     */
+    public function __construct(array $config)
     {
-        $this->config = $configArray;
+        $this->config = $config;
         $this->setQueueDefaults();
         $this->setConsumerDefaults();
+
+        $this->undefinedQueues = array_diff(
+            $this->getQueuesWithConfiguredConsumers(),
+            array_keys($this->config[Config::QUEUES])
+        );
     }
 
     /**
@@ -196,6 +208,142 @@ class Configuration
     }
 
     /**
+     * Get the names of the queues supported by a consumer
+     *
+     * @param int $consumerIndex
+     *
+     * @return array
+     */
+    public function getConsumerQueues($consumerIndex)
+    {
+        return $this->getConsumerParameterOrDefault($consumerIndex, Config::QUEUES);
+    }
+
+    /**
+     * Get the consumer minimum processes
+     *
+     * @param int $consumerIndex
+     *
+     * @return int
+     */
+    public function getConsumerMinProcesses($consumerIndex)
+    {
+        return $this->getConsumerParameterOrDefault($consumerIndex, Config::MIN_PROCESSES);
+    }
+
+    /**
+     * Return the default minimum count of consumer process
+     *
+     * @return int
+     */
+    public function getDefaultConsumerMinProcesses()
+    {
+        return $this->config[Config::CONSUMER_DEFAULTS][Config::MIN_PROCESSES];
+    }
+
+    /**
+     * Get the consumer maximum processes
+     *
+     * @param int $consumerIndex
+     *
+     * @return int
+     */
+    public function getConsumerMaxProcesses($consumerIndex)
+    {
+        return $this->getConsumerParameterOrDefault($consumerIndex, Config::MAX_PROCESSES);
+    }
+
+    /**
+     * Return the default maximum count of consumer process
+     *
+     * @return int
+     */
+    public function getDefaultConsumerMaxProcesses()
+    {
+        return $this->config[Config::CONSUMER_DEFAULTS][Config::MAX_PROCESSES];
+    }
+
+    /**
+     * Get the job batch of a consumer
+     *
+     * @param int $consumerIndex
+     *
+     * @return int
+     */
+    public function getConsumerJobBatch($consumerIndex)
+    {
+        return $this->getConsumerParameterOrDefault($consumerIndex, Config::JOB_BATCH);
+    }
+
+    /**
+     * Return the default consumer job batch
+     *
+     * @return int
+     */
+    public function getDefaultConsumerJobBatch()
+    {
+        return $this->config[Config::CONSUMER_DEFAULTS][Config::JOB_BATCH];
+    }
+
+    /**
+     * Get the names of all queues that have their explicitly defined consumer
+     *
+     * @return string[]
+     */
+    public function getQueuesWithConfiguredConsumers()
+    {
+        $queuesWithConfiguredConsumers = array();
+        foreach ($this->config[Config::CONSUMERS] as $i => $consumer) {
+            $queuesWithConfiguredConsumers = array_merge(
+                $queuesWithConfiguredConsumers,
+                $this->getConsumerQueues($i)
+            );
+        }
+
+        return $queuesWithConfiguredConsumers;
+    }
+
+    /**
+     * Get the names of all queues that don't have an explicitly defined consumer
+     *
+     * These queues will all use the default consumer process.
+     *
+     * @return string[]
+     */
+    public function getQueuesWithDefaultConsumer()
+    {
+        $queuesWithConsumers = $this->getQueuesWithConfiguredConsumers();
+        $allQueues = array_keys($this->getQueuesConfig());
+
+        $queuesWithDefaultConsumer = array_diff(
+            $allQueues,
+            $queuesWithConsumers
+        );
+
+        return $queuesWithDefaultConsumer;
+    }
+
+    /**
+     * Check if the configuration contains a consumer for an undefined queue
+     *
+     * @return bool
+     */
+    public function hasUndefinedQueues()
+    {
+        return ! empty($this->undefinedQueues);
+    }
+
+    /**
+     * Get all queues that have a consumer but are undefined
+     *
+     * @return array
+     */
+    public function getUndefinedQueues()
+    {
+        return $this->undefinedQueues;
+    }
+
+    /**
      * Get a config parameter for a queue, or a default value if it's not defined
      *
      * @param string $queue
@@ -210,6 +358,23 @@ class Configuration
         }
 
         return $this->config[Config::QUEUE_DEFAULTS][$parameterName];
+    }
+
+    /**
+     * Get a config parameter for a consumer, or a default value if it's not defined
+     *
+     * @param string $consumerIndex
+     * @param string $parameterName
+     *
+     * @return mixed
+     */
+    private function getConsumerParameterOrDefault($consumerIndex, $parameterName)
+    {
+        if (isset($this->config[Config::CONSUMERS][$consumerIndex][$parameterName])) {
+            return $this->config[Config::CONSUMERS][$consumerIndex][$parameterName];
+        }
+
+        return $this->config[Config::CONSUMER_DEFAULTS][$parameterName];
     }
 
     /**

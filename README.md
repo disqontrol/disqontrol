@@ -13,12 +13,12 @@ Disqontrol is written in PHP and uses [Disque](https://github.com/antirez/disque
 
 With Disqontrol you get the following features:
 
-- Run multiple jobs in parallel
 - Process jobs in any programming language
 - Run certain jobs regularly
 - Handle failures robustly and log as much as you need
+- Run multiple jobs from one queue in parallel
 - Switch automatically to the best Disque node
-- Use synchronous mode for debugging (process new jobs immediately)
+- Switch to synchronous mode for debugging (process new jobs immediately)
 
 Workers can be called via a console command or a HTTP request and can therefore
 be written in other languages than PHP. The library also provides convenient
@@ -28,6 +28,55 @@ The goal of Disqontrol is to be a user-friendly, clean and robust tool.
 
 Disqontrol follows semantic versioning.
 
+## Usage
+
+### Installation
+
+Install Disqontrol via Composer:
+
+``` bash
+$ composer require webtrh/disqontrol
+```
+
+### Getting started
+
+Copy the file `disqontrol.yml.dist` to `disqontrol.yml`, open `disqontrol.yml`
+and configure Disqontrol. You need to fill out these sections:
+
+- `disque` contains the information about the connection to Disque
+- `queues` configures the queues and what worker should process the jobs
+for each queue. You can leave all parameters as default and configure
+just the worker for each queue.
+- `consumers` - you can leave the whole section empty for starters, Disqontrol
+will spawn consumers with the default parameters.
+
+Start Disqontrol:
+
+``` bash
+$ disqontrol supervisor
+```
+
+``` php
+$disqontrol = new Disqontrol\Disqontrol();
+```
+
+### Adding jobs to Disque
+
+#### From a PHP application
+
+#### From a non-PHP application
+
+
+### What happens with failed jobs?
+
+
+
+### Extending the functionality via Events
+
+
+
+
+## Purpose
 
 ### Why?
 
@@ -77,18 +126,6 @@ the configuration and starts all `Consumers` as needed.
 These are the basic terms you need to use Disqontrol. Inside Disqontrol there
 are a few more terms that will be explained where needed.
 
-### Usage
-
-
-
-### Failed jobs
-
-
-
-### Extending the functionality via Events
-
-
-
 ### Why Disque?
 
 There are many general message queues - RabbitMQ, ZeroMQ, IronMQ, Amazon SQS.
@@ -123,20 +160,6 @@ For libraries in other languages, have a look at
 
 - [Resque](https://github.com/resque/resque) in Ruby
 - [Celery](https://celery.readthedocs.org/en/latest/) in Python
-
-## Install
-
-Via Composer
-
-``` bash
-$ composer require webtrh/disqontrol
-```
-
-## Usage
-
-``` php
-$disqontrol = new Disqontrol\Disqontrol();
-```
 
 ## Change log
 
