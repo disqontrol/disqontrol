@@ -11,7 +11,8 @@
 namespace Disqontrol\Router;
 
 use Disqontrol\Job\JobInterface;
-use Disqontrol\Dispatcher\Call\WorkerCallInterface;
+use Disqontrol\Dispatcher\Call\CallInterface;
+use Disqontrol\Exception\JobRouterException;
 
 /**
  * A job router interface
@@ -26,7 +27,7 @@ use Disqontrol\Dispatcher\Call\WorkerCallInterface;
  * of the call and all parameters necessary to make the actual call - URL and
  * its HTTP method, or a command, or a worker name etc.
  *
- * The router then turns the Directions into a WorkerCall object, which can
+ * The router then turns the Directions into a Call object, which can
  * make the actual call and understands what constitutes success or failure.
  * 
  * @author Martin Schlemmer
@@ -34,16 +35,17 @@ use Disqontrol\Dispatcher\Call\WorkerCallInterface;
 interface JobRouterInterface
 {
     /**
-     * Set a route for a queue
+     * Add a route to the job router
      * 
-     * Queues are identified by their names (eg. 'email-registration').
-     * There can be only one route for a queue. The function overwrites a Route
-     * if one for the given queue name already exists.
-     * 
-     * @param string         $queueName The name of the queue the route is meant for 
-     * @param RouteInterface $route     The route which decides the worker responsible
+     * Routes report the queues they support by themselves. Thus there can be
+     * multiple routes for one job queue. In that case the router will ask
+     * all of them until it gets the worker directions.
+     *
+     * Later added routes will be asked first.
+     *
+     * @param RouteInterface $route The route which decides the worker responsible
      */
-    public function setRoute($queueName, RouteInterface $route);
+    public function addRoute(RouteInterface $route);
     
     /**
      * Decides how the job should be called
@@ -53,7 +55,9 @@ interface JobRouterInterface
      * 
      * @param JobInterface $job The job that should be routed to a worker
      *
-     * @return WorkerCallInterface Full description of the worker call
+     * @return CallInterface Full description of the worker call
+     *
+     * @throws JobRouterException If a worker couldn't be assigned
      */
     public function getCall(JobInterface $job);
 }

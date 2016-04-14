@@ -29,6 +29,7 @@ class MessageFormatter
     const JOB_NACKED = 'NACKed job %s in queue %s';
     const JOB_MOVED_TO_FAILURE_QUEUE = 'Moved job %s from queue "%s" to its failure queue "%s"';
     const FAILED_TO_REMOVE_JOB_FROM_SOURCE_QUEUE = 'When moving job %s from queue "%s" to queue "%s", it couldn\'t be removed from the source queue. It might exist in both queues at once.';
+    const FAILED_TO_ACK = 'Failed to ACK job %s in queue %s. %s. It will be processed again after it times out.';
 
     /**
      * Exception messages
@@ -36,7 +37,8 @@ class MessageFormatter
     const FAILED_UNMARSHAL_INCOMPLETE_RESPONSE = 'Failed to unmarshal an incomplete GETJOB response';
     const FAILED_SERIALIZE_JOB_BODY = 'Failed to serialize job body. %s';
     const FAILED_DESERIALIZE_JOB_BODY = 'Failed to deserialize job body. %s';
-
+    const UNKNOWN_WORKER_TYPE = 'Unknown worker type %s in the configuration file';
+    const JOB_WORKER_NOT_FOUND = 'Cannot find a proper worker for job %s coming from queue "%s"';
     /**
      * Helper template
      */
@@ -239,6 +241,7 @@ class MessageFormatter
      * @param string $jobId
      * @param string $queue
      * @param string $failureQueue
+     * @param string $originalJobId
      *
      * @return string
      */
@@ -276,6 +279,53 @@ class MessageFormatter
         );
     }
 
+    /**
+     * Unknown worker type in the configuration
+     *
+     * @param string $type
+     *
+     * @return string
+     */
+    public static function unknownWorkerType($type)
+    {
+        return sprintf(self::UNKNOWN_WORKER_TYPE, $type);
+    }
+
+    /**
+     * @param string $jobId
+     * @param string $queue
+     * @param string $originalJobId
+     *
+     * @return string
+     */
+    public static function jobWorkerNotFound($jobId, $queue, $originalJobId = '')
+    {
+        return sprintf(
+            self::JOB_WORKER_NOT_FOUND,
+            self::formatJobId($jobId, $originalJobId),
+            $queue
+        );
+    }
+
+    /**
+     * Failed to NACK a job
+     *
+     * @param string $jobId
+     * @param string $queue
+     * @param string $message
+     * @param string $originalJobId
+     *
+     * @return string
+     */
+    public static function failedToAck($jobId, $queue, $message, $originalJobId = '')
+    {
+        return sprintf(
+            self::FAILED_TO_NACK,
+            self::formatJobId($jobId, $originalJobId),
+            $queue,
+            $message
+        );
+    }
 
     /**
      * Format a job ID for the log message

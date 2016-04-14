@@ -26,7 +26,7 @@ wrappers for workers written in PHP.
 
 The goal of Disqontrol is to be a user-friendly, clean and robust tool.
 
-We follow semantic versioning.
+Disqontrol follows semantic versioning.
 
 
 ### Why?
@@ -35,10 +35,10 @@ When deciding to use a job queue, there are many small and large decisions
 to make. For example
 
 - What job queue should I use?
-- Should I use long-running workers?
 - What should I do with failed jobs?
 - How can I debug job queues during development?
 - How can I support repeating tasks?
+- Should I use long-running workers?
 
 Disqontrol answers these questions for you and helps you implement a robust
 job queue in your application, while giving you enough flexibility
@@ -162,7 +162,7 @@ If you discover any security related issues, please email info@webtrh.cz instead
 a competent successor."
 - Eric S. Raymond, The Cathedral and the Bazaar
 
-While we of course have no intention to abandon Disqontrol and hope to provide
+While we of course do not intend to abandon Disqontrol and hope to provide
 a long-term continuity by engaging with the users and promoting maintainers, we
 all know too many abandoned open source projects. People switch companies,
 languages, and change their lifestyles, and ultimately we all die. Let us propose 

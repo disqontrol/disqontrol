@@ -181,6 +181,16 @@ class JobLogger implements LoggerInterface
     }
 
     /**
+     * Get the wrapped Monolog logger
+     *
+     * @return Logger
+     */
+    public function getMonologLogger()
+    {
+        return $this->logger;
+    }
+
+    /**
      * If the caller added a Job object to the context, log the job details too
      *
      * @param array  $context The log message context, maybe containing a Job
@@ -198,7 +208,7 @@ class JobLogger implements LoggerInterface
             $this->eventDispatcher->dispatch(Events::LOG_JOB_DETAILS, $logJobEvent);
 
             $jobBody = $this->serializer->serialize($job->getBody());
-            $extraMessage = MessageFormatter::jobDetails($job->getId(), $jobBody);
+            $extraMessage = MessageFormatter::jobDetails($job->getId(), $jobBody, $job->getOriginalId());
 
             $this->logger->debug($extraMessage, $context);
         }

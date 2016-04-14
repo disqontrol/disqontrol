@@ -10,6 +10,7 @@
 
 namespace Disqontrol\Dispatcher;
 
+use Disqontrol\Dispatcher\Failure\FailureStrategyInterface;
 use Disqontrol\Job\JobInterface;
 
 /**
@@ -19,10 +20,10 @@ use Disqontrol\Job\JobInterface;
  * and what constitutes a success or a failure reply.
  *
  * The decision what worker should be called for a particular job is delegated
- * to the Router. Router returns its decision in form of a WorkerCall.
- * @see Disqontrol\Worker\WorkerCallInterface
+ * to the Router. Router returns its decision in form of a Call.
+ * @see Disqontrol\Dispatcher\CallInterface
  *
- * WorkerCall is an object that knows how exactly to call a worker and how
+ * Call is an object that knows how exactly to call a worker and how
  * to tell a success from a failure.
  * 
  * @author Martin Schlemmer
@@ -32,11 +33,11 @@ interface JobDispatcherInterface
     /**
      * Find the proper worker and call it to process the job
      *
-     * @param JobInterface $job
+     * @param JobInterface[] $jobs Array of jobs to dispatch
      *
      * @return ?
      * TODO: For synchronous jobs, the method can return a boolean.
      *       For asynchronous jobs, other methods must be used - callbacks/promises?
      */
-    public function dispatch(JobInterface $job);
+    public function dispatch(array $jobs);
 }
