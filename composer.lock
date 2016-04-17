@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "1f42dcc7a08e2cd189e06d54fbd6a9b4",
-    "content-hash": "28e527759083750a8881cdba1f3c6fdc",
+    "hash": "fceb308e03c0a0acd28daec53cd74744",
+    "content-hash": "3630fc7c8c17ece8456e263b746d9b52",
     "packages": [
         {
             "name": "doctrine/collections",
@@ -181,16 +181,16 @@
         },
         {
             "name": "mariano/disque-php",
-            "version": "2.0-alpha",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mariano/disque-php.git",
-                "reference": "8147658ef238af6924c851a3a7c5da019821c8bf"
+                "reference": "2e55ddd9c57c658268b5faab1208380f6cecae8b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mariano/disque-php/zipball/8147658ef238af6924c851a3a7c5da019821c8bf",
-                "reference": "8147658ef238af6924c851a3a7c5da019821c8bf",
+                "url": "https://api.github.com/repos/mariano/disque-php/zipball/2e55ddd9c57c658268b5faab1208380f6cecae8b",
+                "reference": "2e55ddd9c57c658268b5faab1208380f6cecae8b",
                 "shasum": ""
             },
             "require": {
@@ -228,7 +228,7 @@
                 "job",
                 "queue"
             ],
-            "time": "2015-11-03 19:24:14"
+            "time": "2016-03-16 16:59:47"
         },
         {
             "name": "monolog/monolog",
@@ -2676,7 +2676,7 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "mariano/disque-php": 15
+        "mariano/disque-php": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
