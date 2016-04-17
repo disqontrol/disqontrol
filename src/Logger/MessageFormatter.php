@@ -23,14 +23,18 @@ class MessageFormatter
     const JOB_ADDED = 'Added a job %s to the queue "%s"';
     const JOB_PROCESS_FAILURE = 'Failed to process job %s from queue "%s". %s';
     const JOB_PROCESSED = 'Job %s from the queue "%s" was successfully processed';
-    const JOB_FAILED_COMPLETELY = 'Failed to process job %s from queue "%s" %i times, moved to the failure queue "%s". %s';
+    const JOB_FAILED_COMPLETELY = 'Failed to process job %s from queue "%s" %d times, moved to the failure queue "%s". %s';
     const FAILED_TO_MOVE_JOB_TO_FAILURE_QUEUE = 'Failed to move job %s from queue "%s" to its failure queue "%s". The job is lost';
-    const FAILED_TO_NACK = 'Failed to NACK job %s in queue %s. %s. It will be requeued automatically after it times out (%is).';
-    const JOB_NACKED = 'NACKed job %s in queue %s';
+    const FAILED_TO_NACK = 'Failed to NACK job %s in queue "%s". %s. It will be requeued automatically after it times out (%ds).';
+    const JOB_NACKED = 'NACKed job %s in queue "%s" with a delay %ds';
     const JOB_MOVED_TO_FAILURE_QUEUE = 'Moved job %s from queue "%s" to its failure queue "%s"';
     const FAILED_TO_REMOVE_JOB_FROM_SOURCE_QUEUE = 'When moving job %s from queue "%s" to queue "%s", it couldn\'t be removed from the source queue. It might exist in both queues at once.';
-    const FAILED_TO_ACK = 'Failed to ACK job %s in queue %s. %s. It will be processed again after it times out.';
-    const FAILED_TO_UNMARSHAL_JOB = 'Failed to unmarshal job coming from Disque. Job data: %s';
+    const FAILED_TO_ACK = 'Failed to ACK job %s in queue "%s". %s. It will be processed again after it times out.';
+    const FAILED_TO_UNMARSHAL_JOB = 'Failed to unmarshal job coming from Disque. %2$s Job data: %1$s';
+    const RECEIVED_TERMINATE_SIGNAL = 'Consumer received SIGINT/SIGTERM signal, shutting down';
+    const ADDED_MISSING_TIME_DATA = 'Added missing time data to job %s: Creation time: %d, job lifetime: %d';
+    const JOB_REACHED_RETRY_LIMIT = 'Job %s has reached retry limit (%d)';
+    const JOB_OUT_OF_TIME = 'Job %s has run out of time (%ds)';
 
     /**
      * Exception messages
@@ -86,16 +90,18 @@ class MessageFormatter
      *
      * @param string $jobId
      * @param string $queue
+     * @param int    $delay
      * @param string $originalJobId
      *
      * @return string A message about the added job
      */
-    public static function jobNacked($jobId, $queue, $originalJobId = '')
+    public static function jobNacked($jobId, $queue, $delay, $originalJobId = '')
     {
         return sprintf(
             self::JOB_NACKED,
             self::formatJobId($jobId, $originalJobId),
-            $queue
+            $queue,
+            $delay
         );
     }
 
@@ -332,12 +338,79 @@ class MessageFormatter
      * Failed to unmarshal job data coming from Disque
      *
      * @param string $jobData
+     * @param string $reason
      *
      * @return string
      */
-    public static function failedToUnmarshalJob($jobData)
+    public static function failedToUnmarshalJob($jobData, $reason = null)
     {
-        return sprintf(self::FAILED_TO_UNMARSHAL_JOB, $jobData);
+        return sprintf(self::FAILED_TO_UNMARSHAL_JOB, $jobData, $reason);
+    }
+
+    /**
+     * Received a signal to terminate, shutting down
+     *
+     * @return string
+     */
+    public static function receivedTerminateSignal()
+    {
+        return self::RECEIVED_TERMINATE_SIGNAL;
+    }
+
+    /**
+     * Added missing job time data to a job
+     *
+     * @param string $jobId
+     * @param string $creationTime
+     * @param string $jobLifetime
+     * @param string $originalJobId
+     *
+     * @return string
+     */
+    public static function addedJobTimeData($jobId, $creationTime, $jobLifetime, $originalJobId = '')
+    {
+        return sprintf(
+            self::ADDED_MISSING_TIME_DATA,
+            self::formatJobId($jobId, $originalJobId),
+            $creationTime,
+            $jobLifetime
+        );
+    }
+
+    /**
+     * Job has reached its retry limit
+     *
+     * @param string $jobId
+     * @param int    $retries
+     * @param string $originalJobId
+     *
+     * @return string
+     */
+    public static function jobReachedRetryLimit($jobId, $retries, $originalJobId = '')
+    {
+        return sprintf(
+            self::JOB_REACHED_RETRY_LIMIT,
+            self::formatJobId($jobId, $originalJobId),
+            $retries
+        );
+    }
+
+    /**
+     * Job is out of time (its lifetime is up)
+     *
+     * @param string $jobId
+     * @param int    $lifetime
+     * @param string $originalJobId
+     *
+     * @return string
+     */
+    public static function jobOutOfTime($jobId, $lifetime, $originalJobId = '')
+    {
+        return sprintf(
+            self::JOB_OUT_OF_TIME,
+            self::formatJobId($jobId, $originalJobId),
+            $lifetime
+        );
     }
 
     /**

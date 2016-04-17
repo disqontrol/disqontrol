@@ -15,6 +15,7 @@ use Disqontrol\Configuration\ConsoleCommandsCompilerPass;
 use Disqontrol\Configuration\FailureStrategiesCompilerPass;
 use Disqontrol\Exception\ConfigurationException;
 use Disqontrol\Exception\FilesystemException;
+use Disqontrol\Logger\LineFormatter;
 use Disque\Client;
 use Disqontrol\Producer\ProducerInterface;
 use Disqontrol\Consumer\ConsumerInterface;
@@ -171,15 +172,17 @@ final class Disqontrol
      */
     private function initializeContainer()
     {
-        $class = $this->getContainerClass();
-        $cache = new ConfigCache($this->getCacheDir() . '/' . $class . '.php', $this->debug);
+        $containerClass = $this->getContainerClass();
+
+        $alwaysCheckCache = true;
+        $cache = new ConfigCache($this->getCacheDir() . '/' . $containerClass . '.php', $alwaysCheckCache);
         if ( ! $cache->isFresh()) {
             $container = $this->buildContainer();
             $container->compile();
-            $this->dumpContainer($cache, $container, $class);
+            $this->dumpContainer($cache, $container, $containerClass);
         }
         require_once $cache->getPath();
-        $this->container = new $class();
+        $this->container = new $containerClass();
         $this->container->set('disqontrol', $this);
     }
 
@@ -312,9 +315,12 @@ final class Disqontrol
      */
     private function prepareLogger()
     {
-        $logger = $this->container->get('monolog_logger');
         $streamHandler = new StreamHandler($this->getLogDir() . '/disqontrol.log', Logger::DEBUG);
-        $logger->getMonologLogger()->pushHandler($streamHandler);
+        $lineFormatter = new LineFormatter();
+        $streamHandler->setFormatter($lineFormatter);
+
+        $logger = $this->container->get('monolog_logger');
+        $logger->pushHandler($streamHandler);
     }
 
     /**
