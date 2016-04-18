@@ -116,6 +116,7 @@ services:
             - '@job_router'
             - '@disque'
             - '@failure_strategy_collection'
+            - '@process_control'
             - '@logger'
 
     # Synchronous services (jobs are processed right away, circumventing Disque)
