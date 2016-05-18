@@ -40,4 +40,9 @@ interface JobDispatcherInterface
      *       For asynchronous jobs, other methods must be used - callbacks/promises?
      */
     public function dispatch(array $jobs);
+
+    /**
+     * Signal the dispatcher to shut down and clean up
+     */
+    public function terminate();
 }

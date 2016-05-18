@@ -10,7 +10,7 @@
 
 namespace Disqontrol\Job\Serializer;
 
-use RuntimeException;
+use InvalidArgumentException;
 
 /**
  * This serializer translates the job body and metadata between PHP and non-PHP
@@ -26,7 +26,7 @@ interface SerializerInterface {
      *
      * @return string Serialized job body
      *
-     * @throws RuntimeException
+     * @throws InvalidArgumentException
      */
     public function serialize($jobBody);
 
@@ -37,7 +37,7 @@ interface SerializerInterface {
      *
      * @return array|string Deserialized job body
      *
-     * @throws RuntimeException
+     * @throws InvalidArgumentException
      */
     public function deserialize($jobBody);
 }

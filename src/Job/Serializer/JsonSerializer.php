@@ -14,7 +14,7 @@ use Disqontrol\Logger\MessageFormatter;
 use Webmozart\Json\JsonEncoder;
 use Webmozart\Json\JsonDecoder;
 use Exception;
-use RuntimeException;
+use InvalidArgumentException;
 
 /**
  * {@inheritdoc}
@@ -45,7 +45,7 @@ class JsonSerializer implements SerializerInterface {
         try {
             $serializedBody = $this->encoder->encode($jobBody);
         } catch (Exception $e) {
-            throw new RuntimeException(
+            throw new InvalidArgumentException(
                 MessageFormatter::failedSerialize($e->getMessage())
             );
         }
@@ -61,7 +61,7 @@ class JsonSerializer implements SerializerInterface {
         try {
             $deserializedBody = $this->decoder->decode($jobBody);
         } catch (Exception $e) {
-            throw new RuntimeException(
+            throw new InvalidArgumentException(
                 MessageFormatter::failedDeserialize($e->getMessage())
             );
         }

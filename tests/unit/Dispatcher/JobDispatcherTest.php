@@ -15,6 +15,7 @@ use Disqontrol\Dispatcher\Failure\FailureStrategyCollection;
 use Disqontrol\Job\Job;
 use Disqontrol\Job\JobInterface;
 use Disqontrol\Logger\JobLogger;
+use Disqontrol\ProcessControl\ProcessControl;
 use Disqontrol\Worker\WorkerType;
 use Mockery as m;
 use Psr\Log\NullLogger;
@@ -31,6 +32,7 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
     const JOB_BODY_1 = 'b1';
     const JOB_BODY_2 = 'b2';
     const QUEUE = 'queue';
+    const JOB_ID = 'jobid';
 
     /**
      * @var JobInterface[] The job processed at the end of the dispatch
@@ -239,6 +241,26 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
         }
     }
 
+    public function testTerminatingDispatcherDoesntStartNewCalls()
+    {
+        $job = new Job('body', 'queue', self::JOB_ID);
+        $call = $this->mockCall($job);
+        $router = $this->mockRouter([$call]);
+        $failures = $this->mockFailureStrategyCollection();
+        $logger = $this->mockLogger();
+        $disque = m::mock(Client::class)
+            ->shouldReceive('nack')
+            ->with(self::JOB_ID)
+            ->once()
+            ->getMock();
+
+        $dispatcher = $this->createDispatcher($router, $failures, $logger, $disque);
+        $dispatcher->terminate();
+        $dispatcher->dispatch([$job]);
+
+        $this->assertTrue(empty($this->processedJobs));
+    }
+
     /**
      * Mock a JobRouter
      *
@@ -329,16 +351,23 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
      * @param $router
      * @param $failures
      * @param $logger
+     * @param $disque
      *
      * @return JobDispatcherInterface
      */
-    private function createDispatcher($router, $failures, $logger)
+    private function createDispatcher($router, $failures, $logger, $disque = null)
     {
-        $disque = m::mock(Client::class)
-            ->shouldReceive('ackJob')
+        if (is_null($disque)) {
+            $disque = m::mock(Client::class)
+                ->shouldReceive('ackJob')
+                ->getMock();
+        }
+
+        $processControl = m::mock(ProcessControl::class)
+            ->shouldReceive('checkForSignals')
             ->getMock();
 
-        return new JobDispatcher($router, $disque, $failures, $logger);
+        return new JobDispatcher($router, $disque, $failures, $processControl, $logger);
     }
 
     /**

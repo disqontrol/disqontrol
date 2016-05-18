@@ -14,6 +14,7 @@ use Disqontrol\Dispatcher\Failure\FailureStrategyCollection;
 use Disqontrol\Logger\JobLogger;
 use Disqontrol\Logger\MessageFormatter;
 use Disqontrol\Job\JobInterface;
+use Disqontrol\ProcessControl\ProcessControl;
 use Disqontrol\Router\JobRouterInterface;
 use Exception;
 use Psr\Log\LoggerInterface;
@@ -54,7 +55,7 @@ class JobDispatcher implements JobDispatcherInterface
 {
     /**
      * How long to wait in the main loop, waiting for calls to return
-     * 50000 microseconds = 0.05s
+     * 10000 microseconds = 0.01s
      */
     const LOOP_PAUSE = 10000;
 
@@ -84,7 +85,12 @@ class JobDispatcher implements JobDispatcherInterface
      *
      * @var FailureStrategyCollection
      */
-    private $failureStrategyRepository;
+    private $failureStrategies;
+
+    /**
+     * @var ProcessControl
+     */
+    private $processControl;
 
     /**
      * @var LoggerInterface
@@ -92,20 +98,29 @@ class JobDispatcher implements JobDispatcherInterface
     private $logger;
 
     /**
+     * @var bool Terminate the current job batch
+     *           No new calls will be started
+     */
+    private $mustTerminate = false;
+
+    /**
      * @param JobRouterInterface        $jobRouter
      * @param Client                    $disque
-     * @param FailureStrategyCollection $failureStrategyRepository
+     * @param FailureStrategyCollection $failureStrategies
+     * @param ProcessControl            $processControl
      * @param LoggerInterface           $logger
      */
     public function __construct(
         JobRouterInterface $jobRouter,
         Client $disque,
-        FailureStrategyCollection $failureStrategyRepository,
+        FailureStrategyCollection $failureStrategies,
+        ProcessControl $processControl,
         LoggerInterface $logger
     ) {
         $this->jobRouter = $jobRouter;
         $this->disque = $disque;
-        $this->failureStrategyRepository = $failureStrategyRepository;
+        $this->failureStrategies = $failureStrategies;
+        $this->processControl = $processControl;
         $this->logger = $logger;
     }
 
@@ -116,6 +131,17 @@ class JobDispatcher implements JobDispatcherInterface
     {
         $calls = $this->collectCalls($jobs);
         $this->callWorkers($calls);
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * The job dispatcher will gracefully stop what it's doing and exit.
+     * @see JobDispatcher::startCalls()
+     */
+    public function terminate()
+    {
+        $this->mustTerminate = true;
     }
 
     /**
@@ -158,8 +184,8 @@ class JobDispatcher implements JobDispatcherInterface
     private function callWorkers(array $calls)
     {
         $calls = $this->orderCalls($calls);
-        $this->startCalls($calls);
-        $this->waitForResults($calls);
+        $startedCalls = $this->startCalls($calls);
+        $this->waitForResults($startedCalls);
     }
 
     /**
@@ -205,12 +231,29 @@ class JobDispatcher implements JobDispatcherInterface
      * Start all calls
      *
      * @param CallInterface[] $calls
+     *
+     * @return CallInterface[] Started calls
      */
     private function startCalls(array $calls)
     {
-        foreach ($calls as $call) {
+        foreach ($calls as $i => $call) {
+            $this->processControl->checkForSignals();
+
+            // If the dispatcher must terminate, don't start new calls,
+            // and return the jobs back to the queue.
+            if ($this->mustTerminate) {
+                unset($calls[$i]);
+                $job = $call->getJob();
+                $jobId = $job->getId();
+                $this->disque->nack($jobId);
+
+                continue;
+            }
+
             $call->call();
         }
+
+        return $calls;
     }
 
     /**
@@ -282,7 +325,7 @@ class JobDispatcher implements JobDispatcherInterface
     {
         $job = $call->getJob();
         $queue = $job->getQueue();
-        $failureStrategy = $this->failureStrategyRepository->getFailureStrategy($queue);
+        $failureStrategy = $this->failureStrategies->getFailureStrategy($queue);
 
         $failureStrategy->handleFailure($call);
     }

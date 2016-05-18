@@ -10,6 +10,8 @@
 
 namespace Disqontrol\Job;
 
+use Disqontrol\Test\Helper\JobFactoryCreator;
+
 class JobFactoryTest extends \PHPUnit_Framework_TestCase {
     /**
      * @var JobFactory
@@ -18,36 +20,11 @@ class JobFactoryTest extends \PHPUnit_Framework_TestCase {
     
     protected function setUp()
     {
-        $this->factory = new JobFactory();
+        $this->factory = JobFactoryCreator::create();
     }
     
     public function testInstance()
     {
         $this->assertInstanceOf(JobFactory::class, $this->factory);
-    }
-
-    public function TestCloningJob()
-    {
-        $body = 'body';
-        $queue = 'queue';
-        $id = 'id';
-        $nacks = 2;
-        $additionalDeliveries = 3;
-
-        $job = new Job($body, $queue, $id, $nacks, $additionalDeliveries);
-
-        $lifetime = 123;
-        $job->setJobLifetime($lifetime);
-
-        $newJob = $this->factory->cloneFailedJob($job);
-
-        $this->assertSame($body, $newJob->getBody());
-        $this->assertSame($queue, $newJob->getQueue());
-        $this->assertSame($id, $newJob->getOriginalId());
-        $this->assertSame($lifetime, $newJob->getJobLifetime());
-        $this->assertNull($newJob->getId());
-
-        $totalRetries = $nacks + $additionalDeliveries + 1;
-        $this->assertSame($totalRetries, $newJob->getRetryCount());
     }
 }

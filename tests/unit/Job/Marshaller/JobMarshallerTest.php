@@ -17,13 +17,14 @@ use Disqontrol\Job\Serializer\JsonSerializer;
 use Disque\Command\Response\JobsResponse AS Response;
 use Disque\Command\Response\JobsWithQueueResponse AS QueueResponse;
 use Disque\Command\Response\JobsWithCountersResponse AS Counters;
+use Disqontrol\Test\Helper\JobFactoryCreator;
 
 class JobMarshallerTest extends \PHPUnit_Framework_TestCase
 {
     const ID = 'id';
     const QUEUE = 'queue';
     const BODY = 'body';
-    const METADATA = 'metadata';
+    const METADATA = ['meta' => 'data'];
     const ADDITIONAL_DELIVERIES = 123;
     const NACKS = 321;
 
@@ -39,7 +40,7 @@ class JobMarshallerTest extends \PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $jobFactory = new JobFactory();
+        $jobFactory = JobFactoryCreator::create();
         $serializer = new JsonSerializer();
         $this->jm = new JobMarshaller($jobFactory, $serializer);
     }
@@ -63,7 +64,12 @@ class JobMarshallerTest extends \PHPUnit_Framework_TestCase
 
         $this->assertInstanceOf(JobInterface::class, $job);
         $this->assertSame($job->getBody(), self::BODY);
-        $this->assertSame($job->getAllMetadata(), self::METADATA);
+
+        // Metadata can now contain extra time information, so we just want to
+        // check the existence of the original value in the final metadata array
+        $metadata = self::METADATA;
+        $metadatum = current($metadata);
+        $this->assertContains($metadatum, $job->getAllMetadata());
     }
 
     public function testMarshalAndUnmarshalAJobWithCounters()

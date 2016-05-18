@@ -95,7 +95,7 @@ class JobLoggerTest extends \PHPUnit_Framework_TestCase
                             and strpos($message, self::JOB_ID) !== false);
                     }
                 ),
-                $context
+                anything()
             )
             ->once()
             ->andReturn(true)

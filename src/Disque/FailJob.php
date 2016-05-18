@@ -199,7 +199,7 @@ class FailJob
         } catch (Exception $e) {
             // What should we do if the ACK fails? Should we go on, or stop?
             // If we go on, the job will exist twice, once in the original
-            // queue (right now it is reserved), once in the new queue.
+            // queue (where it is reserved right now), once in the new queue.
             //
             // What happens next depends on its lifetime and process timeout.
             // It might be requeued and processed again if the process timeout
@@ -215,7 +215,7 @@ class FailJob
             // disappears altogether.
             //
             // Based on this I think we should go on and move the job. It's less
-            // bad to have a job twice than to lose it altogether.
+            // wrong to have a job twice than to lose it altogether.
             // Just log it so the inconsistency can be explained.
             $this->logger->error(
                 Msg::failedToRemoveJobFromSourceQueue($jobId, $job->getQueue(), $newQueue, $job->getOriginalId())
@@ -223,7 +223,7 @@ class FailJob
         }
 
         // Create the job's copy
-        $newJob = $this->jobFactory->cloneFailedJob($job);
+        $newJob = $this->cloneFailedJob($job);
 
         // Set the new queue
         $newJob->setQueue($newQueue);
@@ -243,11 +243,11 @@ class FailJob
      *
      * @param JobInterface $job
      *
-     * @return int The rest lifetime
+     * @return int The remaining lifetime
      */
     private function calculateRemainingLifetime(JobInterface $job)
     {
-        $creationTime = $job->getCreationTime();
+        $creationTime = (int)$job->getCreationTime();
         $jobLifetime = (int)$job->getJobLifetime();
 
         if (empty($creationTime)) {
@@ -273,7 +273,15 @@ class FailJob
         $maxRetries = $this->config->getMaxRetries($queue);
         $retryCount = $job->getRetryCount();
 
-        return $maxRetries <= $retryCount;
+        $jobHasReachedRetryLimit = $maxRetries <= $retryCount;
+
+        if ($jobHasReachedRetryLimit) {
+            $this->logger->debug(
+                Msg::jobReachedRetryLimit($job->getId(), $maxRetries, $job->getOriginalId())
+            );
+        }
+            
+        return $jobHasReachedRetryLimit;
     }
 
     /**
@@ -288,7 +296,15 @@ class FailJob
     {
         $remainingLifetime = $this->calculateRemainingLifetime($job);
 
-        return ($remainingLifetime <= $delay or $remainingLifetime <= 0);
+        $lifetimeIsUp = ($remainingLifetime <= $delay or $remainingLifetime <= 0);
+
+        if ($lifetimeIsUp) {
+            $this->logger->debug(
+                Msg::jobOutOfTime($job->getId(), $job->getJobLifetime(), $job->getOriginalId())
+            );
+        }
+
+        return $lifetimeIsUp;
     }
 
     /**
@@ -314,7 +330,8 @@ class FailJob
             return false;
         }
 
-        $this->logger->info(Msg::jobNacked($jobId, $queue, $originalId));
+        $delay = 0;
+        $this->logger->info(Msg::jobNacked($jobId, $queue, $delay, $originalId));
 
         return true;
     }
@@ -344,10 +361,43 @@ class FailJob
                 Msg::failedToNack($jobId, $queue, $message, $job->getProcessTimeout(), $originalId)
             );
         } else {
-            $this->logger->info(Msg::jobNacked($jobId, $queue, $originalId));
+            $this->logger->info(Msg::jobNacked($jobId, $queue, $delay, $originalId));
         }
 
         return $nackedWithDelay;
+    }
+
+    /**
+     * Create a clone of an existing job, remembering its ID and incrementing
+     * the retry count by 1
+     *
+     * This is used to work around the limitations of Disque which cannot
+     * move jobs to a different queue, NACK them with a delay or change the job
+     * body.
+     *
+     * In all these situations, we create a new job and store the original job ID
+     * and the retry count in the job metadata.
+     *
+     * @see https://github.com/antirez/disque/issues/174
+     *
+     * @param JobInterface $job
+     *
+     * @return JobInterface A new job ready to be inserted in Disque
+     */
+    private function cloneFailedJob(JobInterface $job)
+    {
+        $body = $job->getBodyWithMetadata();
+        $queue = $job->getQueue();
+        $newJob = $this->jobFactory->createNewJob($body, $queue);
+
+        $originalId = $job->getOriginalId();
+        $newJob->setOriginalId($originalId);
+
+        // Because this is a failed job, increment the retry count right here
+        $retryCount = $job->getRetryCount() + 1;
+        $newJob->setPreviousRetryCount($retryCount);
+
+        return $newJob;
     }
 
 }
