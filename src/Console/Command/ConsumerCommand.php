@@ -55,6 +55,10 @@ class ConsumerCommand extends Command
      */
     private $consumer;
 
+    /**
+     * @param Configuration     $config
+     * @param ConsumerInterface $consumer
+     */
     public function __construct(
         Configuration $config,
         ConsumerInterface $consumer

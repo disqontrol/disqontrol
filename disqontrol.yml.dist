@@ -107,7 +107,7 @@ disqontrol:
                 # - php_cli : A PHP worker wrapped in a console command
                 #
                 # All workers but inline PHP workers allow asynchronous calls.
-                # (See comment at 'job-concurrency' below.)
+                # (See the comment at 'job_batch' below.)
                 #
                 # The value is the location of the worker. In case of a console
                 # command, it is the command itself.
@@ -236,7 +236,9 @@ disqontrol:
             - 'pic-resize'
 
         # Each queue that is not assigned to any consumer in this section will
-        # get its own consumer with the defaults defined in 'consumer-defaults'.
+        # be served by the default consumer with the defaults defined in
+        # 'consumer-defaults'.
         # In our example we haven't assigned the last queue, 'rss-update',
-        # to any consumer. Its consumer will spawn 1 process, can autoscale
-        # to 5 processes and will try to work in batches of 10 jobs at once.
+        # to any consumer. The default consumer will spawn 1 process, can
+        # autoscale to 5 processes and will try to work in batches of 10 jobs
+        # at once.
