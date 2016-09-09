@@ -115,7 +115,6 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
         // Add parameters to the worker
         $configParams[Config::QUEUES][self::JOB_QUEUE][Config::WORKER]
             [self::PARAMETER_NAME] = self::PARAMETER_VALUE;
-        $container = $this->createContainer($configParams);
 
         $process = m::mock(NullProcess::class)
             ->makePartial()
@@ -134,13 +133,13 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
             }), anything())
             ->andReturn($process)
             ->getMock();
-        $container->set(self::SERVICE_PROCESS_FACTORY, $processFactory);
 
         $disque = m::mock(Client::class)
             ->shouldReceive('ackJob')
             ->with(self::JOB_ID)
             ->getMock();
-        $container->set(self::SERVICE_DISQUE, $disque);
+
+        $container = $this->createContainer($configParams, $disque, $processFactory);
 
         $queue = $this->getQueueName();
         $job = new Job('body', $queue, self::JOB_ID);
@@ -156,18 +155,6 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
     // JobRouter tests
     public function testRouteFromEvent()
     {
-        $container = $this->createContainer();
-
-        $listener = function (JobRouteEvent $event) {
-            $directions = new WorkerDirections(WorkerType::CLI(), self::WORKER_ADDRESS);
-            $event->setWorkerDirections($directions);
-            $event->stopPropagation();
-        };
-
-        $eventDispatcher = $container->get('event_dispatcher');
-        $highPriority = 9999;
-        $eventDispatcher->addListener(Events::JOB_ROUTE, $listener, $highPriority);
-
         // Test variables that we will fill from inside the mock and assert later
         $command = '';
         $timeout = 0;
@@ -189,13 +176,23 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
                 }))
                 ->andReturn($process)
             ->getMock();
-        $container->set(self::SERVICE_PROCESS_FACTORY, $processFactory);
 
         $disque = m::mock(Client::class)
             ->shouldReceive('ackJob')
                 ->with(self::JOB_ID)
             ->getMock();
-        $container->set(self::SERVICE_DISQUE, $disque);
+
+        $container = $this->createContainer([], $disque, $processFactory);
+
+        $listener = function (JobRouteEvent $event) {
+            $directions = new WorkerDirections(WorkerType::CLI(), self::WORKER_ADDRESS);
+            $event->setWorkerDirections($directions);
+            $event->stopPropagation();
+        };
+
+        $eventDispatcher = $container->get('event_dispatcher');
+        $highPriority = 9999;
+        $eventDispatcher->addListener(Events::JOB_ROUTE, $listener, $highPriority);
 
         $queue = $this->getQueueName();
         $job = new Job('body', $queue, self::JOB_ID);
@@ -216,13 +213,12 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
      */
     public function testWorkerNotFound()
     {
-        $container = $this->createContainer();
-
         $logger = m::mock(NullLogger::class)
             ->shouldReceive('error')
             ->once()
             ->getMock();
-        $container->set(self::SERVICE_LOGGER, $logger);
+
+        $container = $this->createContainer([], null, null, $logger);
 
         $unknownQueue = 'unknown queue foobar x';
         $job = new Job('body', $unknownQueue);
@@ -236,13 +232,12 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
      */
     public function testUnsupportedWorkerType()
     {
-        $container = $this->createContainer();
-
         $logger = m::mock(NullLogger::class)
             ->shouldReceive('error')
             ->once()
             ->getMock();
-        $container->set(self::SERVICE_LOGGER, $logger);
+
+        $container = $this->createContainer([], null, null, $logger);
 
         $queue = 'foobar queue';
 
@@ -264,13 +259,12 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
      */
     public function testProcessFactoryThrowsException()
     {
-        $container = $this->createContainer();
-
         $processFactory = m::mock(ProcessFactory::class)
             ->shouldReceive('create')
                 ->andThrow(new RuntimeException('proc_open is not installed'))
             ->getMock();
-        $container->set(self::SERVICE_PROCESS_FACTORY, $processFactory);
+
+        $container = $this->createContainer([], null, $processFactory);
 
         $queue = $this->getQueueName();
         $job = new Job('body', $queue);
@@ -291,14 +285,11 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
      */
     public function testCallsCalledProperly()
     {
-        $container = $this->createContainer();
-
         $disque = m::mock(Client::class)
             ->shouldReceive('ackJob')
             ->with(self::JOB_ID)
             ->once()
             ->getMock();
-        $container->set(self::SERVICE_DISQUE, $disque);
 
         $process = m::mock(NullProcess::class)
             ->makePartial()
@@ -316,7 +307,8 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
             ->shouldReceive('create')
             ->andReturn($process)
             ->getMock();
-        $container->set(self::SERVICE_PROCESS_FACTORY, $processFactory);
+
+        $container = $this->createContainer([], $disque, $processFactory);
 
         $dispatcher = $container->get('job_dispatcher');
 
@@ -331,21 +323,19 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
      */
     public function testAckSuccessfulJob()
     {
-        $container = $this->createContainer();
-
         $disque = m::mock(Client::class)
             ->shouldReceive('ackJob')
                 ->with(self::JOB_ID)
                 ->once()
             ->getMock();
-        $container->set(self::SERVICE_DISQUE, $disque);
 
         $process = $this->mockSuccessfulProcess();
         $processFactory = m::mock(ProcessFactory::class)
             ->shouldReceive('create')
                 ->andReturn($process)
             ->getMock();
-        $container->set(self::SERVICE_PROCESS_FACTORY, $processFactory);
+
+        $container = $this->createContainer([], $disque, $processFactory);
 
         $dispatcher = $container->get('job_dispatcher');
 
@@ -363,20 +353,18 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
      */
     public function testProperFailureStrategy()
     {
-        $container = $this->createContainer();
-
         $disque = m::mock(Client::class)
             ->shouldReceive('nack')
                 ->with(self::JOB_ID)
                 ->once()
             ->getMock();
-        $container->set(self::SERVICE_DISQUE, $disque);
 
         $processFactory = m::mock(ProcessFactory::class)
             ->shouldReceive('create')
                 ->andReturn(new NullProcess())
             ->getMock();
-        $container->set(self::SERVICE_PROCESS_FACTORY, $processFactory);
+
+        $container = $this->createContainer([], $disque, $processFactory);
 
         $dispatcher = $container->get('job_dispatcher');
 
@@ -394,11 +382,8 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
      */
     public function testJobOutOfRetries()
     {
-        $container = $this->createContainer();
-
-        $config = $container->get('configuration');
-        $queue = $this->getQueueName();
-        $failureQueue = $config->getFailureQueue($queue);
+        // Note: This must be equal to disqontrol.yml.dist
+        $failureQueue = 'unsent-registration-emails';
 
         $disque = m::mock(Client::class)
             ->shouldReceive('ackJob')
@@ -408,19 +393,21 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
                 ->with($failureQueue, anything(), anything())
                 ->once()
             ->getMock();
-        $container->set(self::SERVICE_DISQUE, $disque);
 
         $processFactory = m::mock(ProcessFactory::class)
             ->shouldReceive('create')
                 ->andReturn(new NullProcess())
             ->getMock();
-        $container->set(self::SERVICE_PROCESS_FACTORY, $processFactory);
+
+        $container = $this->createContainer([], $disque, $processFactory);
 
         $dispatcher = $container->get('job_dispatcher');
 
+        $queue = $this->getQueueName();
         $job = new Job('body', $queue, self::JOB_ID);
         $job->setJobLifetime(60);
 
+        $config = $container->get('configuration');
         $maxRetries = $config->getMaxRetries($queue);
         $job->setPreviousRetryCount($maxRetries + 1);
 
@@ -432,11 +419,8 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
      */
     public function testJobOutOfTime()
     {
-        $container = $this->createContainer();
-
-        $config = $container->get('configuration');
-        $queue = $this->getQueueName();
-        $failureQueue = $config->getFailureQueue($queue);
+        // Note: This must be equal to disqontrol.yml.dist
+        $failureQueue = 'unsent-registration-emails';
 
         $disque = m::mock(Client::class)
             ->shouldReceive('ackJob')
@@ -446,16 +430,17 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
                 ->with($failureQueue, anything(), anything())
                 ->once()
             ->getMock();
-        $container->set(self::SERVICE_DISQUE, $disque);
 
         $processFactory = m::mock(ProcessFactory::class)
             ->shouldReceive('create')
                 ->andReturn(new NullProcess())
             ->getMock();
-        $container->set(self::SERVICE_PROCESS_FACTORY, $processFactory);
+
+        $container = $this->createContainer([], $disque, $processFactory);
 
         $dispatcher = $container->get('job_dispatcher');
 
+        $queue = $this->getQueueName();
         $job = new Job('body', $queue, self::JOB_ID);
         $job->setCreationTime(strtotime('1970-01-01'));
         $job->setJobLifetime(60);
@@ -466,11 +451,17 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @param array $configParams
+     * @param $disque
+     * @param $processFactory
+     * @param $logger
      *
      * @return ContainerInterface
      */
     private function createContainer(
-        array $configParams = array()
+        array $configParams = array(),
+        $disque = null,
+        $processFactory = null,
+        $logger = null
     ) {
         if (empty($configParams)) {
             $configParams = $this->loadConfiguration();
@@ -495,27 +486,24 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
             )
         );
 
-        // Swap some service definition for a synthetic service.
-        // Thus we can mock and replace them later.
-        // Non-synthetic services cannot be replaced in a compiled container
-        $syntheticService = new Definition();
-        $syntheticService->setSynthetic(true);
-        $container->setDefinition(self::SERVICE_DISQUE, $syntheticService);
-        $container->setDefinition(self::SERVICE_PROCESS_FACTORY, $syntheticService);
-        $container->setDefinition(self::SERVICE_LOGGER, $syntheticService);
+        // Set mocked services
+        if (empty($disque)) {
+            $disque = m::mock(Client::class);
+        }
+        $container->set(self::SERVICE_DISQUE, $disque);
+
+        if (empty($processFactory)) {
+            $processFactory = m::mock(ProcessFactory::class);
+        }
+        $container->set(self::SERVICE_PROCESS_FACTORY, $processFactory);
+
+        if (empty($logger)) {
+            $logger = new NullLogger();
+        }
+        $container->set(self::SERVICE_LOGGER, $logger);
 
         $container->compile();
         $this->container = $container;
-
-        // Set mocked services that do nothing
-        $nullDisque = m::mock(Client::class);
-        $container->set(self::SERVICE_DISQUE, $nullDisque);
-
-        $nullProcessFactory = m::mock(ProcessFactory::class);
-        $container->set(self::SERVICE_PROCESS_FACTORY, $nullProcessFactory);
-
-        $nullLogger = new NullLogger();
-        $container->set(self::SERVICE_LOGGER, $nullLogger);
 
         return $container;
     }
