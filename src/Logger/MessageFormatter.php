@@ -31,10 +31,13 @@ class MessageFormatter
     const FAILED_TO_REMOVE_JOB_FROM_SOURCE_QUEUE = 'When moving job %s from queue "%s" to queue "%s", it couldn\'t be removed from the source queue. It might exist in both queues at once.';
     const FAILED_TO_ACK = 'Failed to ACK job %s in queue "%s". %s. It will be processed again after it times out.';
     const FAILED_TO_UNMARSHAL_JOB = 'Failed to unmarshal job coming from Disque. %2$s Job data: %1$s';
-    const RECEIVED_TERMINATE_SIGNAL = 'Consumer received SIGINT/SIGTERM signal, shutting down';
+    const RECEIVED_TERMINATE_SIGNAL = '%s received SIGINT/SIGTERM signal, shutting down';
     const ADDED_MISSING_TIME_DATA = 'Added missing time data to job %s: Creation time: %d, job lifetime: %d';
     const JOB_REACHED_RETRY_LIMIT = 'Job %s has reached retry limit (%d)';
     const JOB_OUT_OF_TIME = 'Job %s has run out of time (%ds)';
+    const STARTING_CONSUMER_PROCESS = 'Starting a consumer process with the command: %s';
+    const SUPERVISOR_SPAWNED_PROCESS_GROUP = 'Supervisor spawned a consumer process group for queues %s';
+    const SUPERVISOR_SPAWNED_DEFAULT_PROCESS_GROUP = 'Supervisor spawned a default consumer process group for queues %s';
 
     /**
      * Exception messages
@@ -44,6 +47,8 @@ class MessageFormatter
     const FAILED_DESERIALIZE_JOB_BODY = 'Failed to deserialize job body. %s';
     const UNKNOWN_WORKER_TYPE = 'Unknown worker type %s in the configuration file';
     const JOB_WORKER_NOT_FOUND = 'Cannot find a proper worker for job %s coming from queue "%s"';
+    const UNDEFINED_QUEUES_IN_CONSUMER_CONFIG = 'Consumers are configured for undefined queues: %s';
+
     /**
      * Helper template
      */
@@ -350,11 +355,13 @@ class MessageFormatter
     /**
      * Received a signal to terminate, shutting down
      *
+     * @param string $receiver Who received the signal?
+     *
      * @return string
      */
-    public static function receivedTerminateSignal()
+    public static function receivedTerminateSignal($receiver = 'Consumer')
     {
-        return self::RECEIVED_TERMINATE_SIGNAL;
+        return sprintf(self::RECEIVED_TERMINATE_SIGNAL, $receiver);
     }
 
     /**
@@ -413,6 +420,58 @@ class MessageFormatter
         );
     }
 
+    /**
+     * There are consumers configured for undefined queues
+     *
+     * @param array $queues
+     *
+     * @return string
+     */
+    public static function undefinedQueuesInConsumerConfig(array $queues)
+    {
+        return sprintf(
+            self::UNDEFINED_QUEUES_IN_CONSUMER_CONFIG,
+            implode(', ', $queues)
+        );
+    }
+
+    /**
+     * Starting a consumer process
+     *
+     * @param string $cmd The consumer command
+     *
+     * @return string
+     */
+    public static function startingConsumerProcess($cmd)
+    {
+        return sprintf(self::STARTING_CONSUMER_PROCESS, $cmd);
+    }
+
+    /**
+     * Supervisor spawned a consumer process group
+     *
+     * @param string[] $queues
+     *
+     * @return string
+     */
+    public static function supervisorSpawnedProcessGroup(array $queues)
+    {
+        $queues = implode(', ', $queues);
+        return sprintf(self::SUPERVISOR_SPAWNED_PROCESS_GROUP, $queues);
+    }
+
+    /**
+     * Supervisor spawned a default consumer process group
+     *
+     * @param string[] $queues
+     *
+     * @return string
+     */
+    public static function supervisorSpawnedDefaultProcessGroup(array $queues)
+    {
+        $queues = implode(', ', $queues);
+        return sprintf(self::SUPERVISOR_SPAWNED_DEFAULT_PROCESS_GROUP, $queues);
+    }
     /**
      * Format a job ID for the log message
      *

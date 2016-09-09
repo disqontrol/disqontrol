@@ -184,3 +184,33 @@ services:
 
     process_control:
         class: Disqontrol\ProcessControl\ProcessControl
+
+    process_spawner:
+        class: Disqontrol\Consumer\Process\ProcessSpawner
+        arguments:
+            - '@logger'
+
+    autoscale_algorithm_factory:
+        class: Disqontrol\Consumer\Autoscale\AutoscaleAlgorithmFactory
+
+    process_group_factory:
+        class: Disqontrol\Consumer\Process\ProcessGroupFactory
+        arguments:
+            - '@process_spawner'
+            - '@autoscale_algorithm_factory'
+            - '@logger'
+
+    supervisor:
+        class: Disqontrol\Supervisor\Supervisor
+        arguments:
+            - '@configuration'
+            - '@process_control'
+            - '@process_group_factory'
+            - '@logger'
+
+    supervisor_command:
+        class: Disqontrol\Console\Command\SupervisorCommand
+        arguments:
+            - '@supervisor'
+        tags:
+            - { name: disqontrol.command }

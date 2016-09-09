@@ -113,8 +113,10 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
     {
         $configParams = $this->loadConfiguration();
         // Add parameters to the worker
-        $configParams[Config::QUEUES][self::JOB_QUEUE][Config::WORKER]
-            [self::PARAMETER_NAME] = self::PARAMETER_VALUE;
+        $configParams[Config::QUEUES][self::JOB_QUEUE][Config::WORKER] = [
+            WorkerType::HTTP => self::WORKER_ADDRESS,
+            self::PARAMETER_NAME => self::PARAMETER_VALUE
+        ];
 
         $process = m::mock(NullProcess::class)
             ->makePartial()
