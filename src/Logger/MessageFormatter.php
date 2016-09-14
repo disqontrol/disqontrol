@@ -9,6 +9,8 @@
 */
 namespace Disqontrol\Logger;
 
+use Disqontrol\Scheduler\CrontabEntry;
+
 /**
  * A helper for creating log and exception messages
  *
@@ -38,6 +40,7 @@ class MessageFormatter
     const STARTING_CONSUMER_PROCESS = 'Starting a consumer process with the command: %s';
     const SUPERVISOR_SPAWNED_PROCESS_GROUP = 'Supervisor spawned a consumer process group for queues %s';
     const SUPERVISOR_SPAWNED_DEFAULT_PROCESS_GROUP = 'Supervisor spawned a default consumer process group for queues %s';
+    const SCHEDULER_RUNS_JOB = 'Scheduler is running %s';
 
     /**
      * Exception messages
@@ -48,6 +51,8 @@ class MessageFormatter
     const UNKNOWN_WORKER_TYPE = 'Unknown worker type %s in the configuration file';
     const JOB_WORKER_NOT_FOUND = 'Cannot find a proper worker for job %s coming from queue "%s"';
     const UNDEFINED_QUEUES_IN_CONSUMER_CONFIG = 'Consumers are configured for undefined queues: %s';
+    const MISSING_CRONTAB_PATH = 'Add a path to the crontab file';
+    const FILE_NOT_FOUND = 'The file "%s" was not found';
 
     /**
      * Helper template
@@ -472,6 +477,41 @@ class MessageFormatter
         $queues = implode(', ', $queues);
         return sprintf(self::SUPERVISOR_SPAWNED_DEFAULT_PROCESS_GROUP, $queues);
     }
+
+    /**
+     * Scheduler runs a job
+     *
+     * @param CrontabEntry|string $crontabEntry
+     *
+     * @return string
+     */
+    public static function schedulerRunsJob($crontabEntry)
+    {
+        return sprintf(self::SCHEDULER_RUNS_JOB, $crontabEntry);
+    }
+
+    /**
+     * Missing the path to the crontab file
+     *
+     * @return string
+     */
+    public static function missingCrontabPath()
+    {
+        return self::MISSING_CRONTAB_PATH;
+    }
+
+    /**
+     * File not found
+     *
+     * @param string $path
+     *
+     * @return string
+     */
+    public static function fileNotFound($path)
+    {
+        return sprintf(self::FILE_NOT_FOUND, $path);
+    }
+
     /**
      * Format a job ID for the log message
      *

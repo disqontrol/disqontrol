@@ -66,9 +66,41 @@ $disqontrol = new Disqontrol\Disqontrol();
 
 #### From a non-PHP application
 
+### Regular (repeated) jobs
+
+Disqontrol supports regular, repeated jobs. To set up regular jobs, you have to
+- create a Disqontrol crontab
+- run the Disqontrol scheduler every minute from the system cron
+
+A Disqontrol crontab row has the following syntax:
+
+`* * * * * queue job-body`
+
+Where
+- the asterisks follow the common cron syntax (minute, hour, day, month, weekday),
+- `queue` is the name of the job queue and
+- `job-body` is the body of the scheduled job. The body can contain white spaces.
+
+An example crontab with regular jobs may look like this:
+
+``` bash
+15 5 * * * daily-cleanup 1
+34 2 * * 5 weekly-pruning all
+*/5 * * * * five-minute-checkup 1
+```
+
+The first job will run every day at 05:15 AM, the second job will run every
+Friday at 02:34 AM and the third job will run every 5 minutes.
+
+Run the scheduler every minute by adding this entry to your system crontab:
+
+`* * * * * /path/to/disqontrol scheduler --crontab=/path/to/crontab >/dev/null 2>&1`
+
+You can of course run your jobs by adding them directly to the system
+crontab. Running them through Disqontrol allows you to add the job crontab
+to your application's directory and version it along with your code.
 
 ### What happens with failed jobs?
-
 
 
 ### Extending the functionality via Events

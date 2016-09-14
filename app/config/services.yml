@@ -186,7 +186,7 @@ services:
         class: Disqontrol\ProcessControl\ProcessControl
 
     process_spawner:
-        class: Disqontrol\Consumer\Process\ProcessSpawner
+        class: Disqontrol\Consumer\Process\ConsumerProcessSpawner
         arguments:
             - '@logger'
 
@@ -212,5 +212,23 @@ services:
         class: Disqontrol\Console\Command\SupervisorCommand
         arguments:
             - '@supervisor'
+        tags:
+            - { name: disqontrol.command }
+
+    crontab_parser:
+        class: Disqontrol\Scheduler\CrontabParser
+
+    scheduler:
+        class: Disqontrol\Scheduler\Scheduler
+        arguments:
+            - '@crontab_parser'
+            - '@producer'
+            - '@logger'
+
+    scheduler_command:
+        class: Disqontrol\Console\Command\SchedulerCommand
+        arguments:
+            - '@scheduler'
+            - '@logger'
         tags:
             - { name: disqontrol.command }
