@@ -96,7 +96,7 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
     {
         $earlierJob = new Job(self::JOB_BODY_1, self::QUEUE);
         $success = true;
-        $type = WorkerType::PHP();
+        $type = WorkerType::INLINE_PHP_WORKER();
         $blockingCall = $this->mockCall($earlierJob, $success, $type);
 
         $laterJob = new Job(self::JOB_BODY_2, self::QUEUE);
@@ -386,9 +386,9 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
         $success = ($successThrow < 6) ? true : false;
         $types = [
             WorkerType::CLI(),
-            WorkerType::PHP(),
+            WorkerType::INLINE_PHP_WORKER(),
             WorkerType::HTTP(),
-            WorkerType::PHP_CLI()
+            WorkerType::ISOLATED_PHP_WORKER()
         ];
         shuffle($types);
         $type = $types[0];

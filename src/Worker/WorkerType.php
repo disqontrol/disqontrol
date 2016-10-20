@@ -20,10 +20,15 @@ use InvalidArgumentException;
  * This enum contains all known worker types and allows to make use of type hinting
  * thus making it easier to know whether you work with a valid worker type.
  *
- * CLI is a worker called via a console command.
- * HTTP is a worker called via a HTTP request.
- * PHP is an inline PHP worker - PHP code called directly from the Consumer.
- * PHP-CLI is a PHP worker called in an independent process to perform one job.
+ * CLI is a worker called via a console command
+ * HTTP is a worker called via a HTTP request
+ * INLINE_PHP_WORKER is a PHP code called directly from the Consumer
+ * ISOLATED_PHP_WORKER is a PHP worker called in a separate process to process
+ * one job
+ *
+ * PHP workers must be registered during the bootstrap
+ * in the WorkerFactoryCollection, which must be injected into the Disqontrol
+ * class constructor.
  *
  * @see also disqontrol.yml
  * 
@@ -31,15 +36,15 @@ use InvalidArgumentException;
  *
  * @method static WorkerType CLI()
  * @method static WorkerType HTTP()
- * @method static WorkerType PHP()
- * @method static WorkerType PHP_CLI()
+ * @method static WorkerType INLINE_PHP_WORKER()
+ * @method static WorkerType ISOLATED_PHP_WORKER()
  */
 class WorkerType extends Enum
 {
     const CLI = 'cli';
     const HTTP = 'http';
-    const PHP = 'php';
-    const PHP_CLI = 'php-cli';
+    const INLINE_PHP_WORKER = 'inline_php_worker';
+    const ISOLATED_PHP_WORKER = 'isolated_php_worker';
 
     /**
      * Get the WorkerType instance by its value.

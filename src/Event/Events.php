@@ -96,7 +96,7 @@ final class Events
 
     /**
      * Before running the worker setup
-     * Dispatched from WorkerRepository
+     * Dispatched from WorkerFactoryCollection
      */
     const WORKER_SETUP = 'disqontrol.worker.setup';
 }

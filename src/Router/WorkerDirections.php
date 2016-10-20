@@ -20,7 +20,7 @@ use Disqontrol\Worker\WorkerType;
 class WorkerDirections implements WorkerDirectionsInterface
 {
     /**
-     * The type of the worker - CLI, HTTP, PHP, PHP-CLI
+     * The type of the worker - CLI, HTTP, INLINE_PHP_WORKER, ISOLATED_PHP_WORKER
      *
      * @var WorkerType
      */

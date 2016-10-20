@@ -175,7 +175,7 @@ disqontrol:
             # Create a WorkerBuilder for each PHP worker and register it during
             # the Disqontrol bootstrap.
             worker:
-                php: 'PicResizeWorker'
+                inline_php_worker: 'PicResizeWorker'
 
         'rss-update':
             # An example of a PHP worker wrapped in a console command
@@ -184,10 +184,10 @@ disqontrol:
             # one class.
             # This worker processes just one job and exits. Thus there's no
             # worry about memory leaks.
-            # Create a WorkerBuilder for each PHP-CLI worker and register it
-            # during the Disqontrol bootstrap.
+            # Create a WorkerFactory for each isolated PHP worker and register
+            # them during the Disqontrol bootstrap.
             worker:
-                php_cli: 'RssUpdateWorker'
+                isolated_php_worker: 'RssUpdateWorker'
 
     # Default settings for all consumers
     consumer_defaults:
@@ -208,7 +208,7 @@ disqontrol:
         #
         # The consumer will ask Disque for a batch of as many jobs as specified
         # here and if possible (for workers that allow asynchronous calls, i.e.
-        # HTTP, CLI and PHP-CLI workers) calls all workers in the batch at once.
+        # HTTP, CLI and isolated PHP workers) calls all workers in the batch at once.
         job_batch: 10
 
     # Define consumers

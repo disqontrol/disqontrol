@@ -42,7 +42,7 @@ abstract class AbstractCall implements CallInterface
      */
     public function isBlocking()
     {
-        return $this->getType() === WorkerType::PHP();
+        return $this->getType() === WorkerType::INLINE_PHP_WORKER();
     }
 
     /**

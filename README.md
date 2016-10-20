@@ -19,6 +19,7 @@ With Disqontrol you get the following features:
 - Run multiple jobs from one queue in parallel
 - Switch automatically to the best Disque node
 - Switch to synchronous mode for debugging (process new jobs immediately)
+  (synchronous mode is available only for PHP workers)
 
 Workers can be called via a console command or a HTTP request and can therefore
 be written in other languages than PHP. The library also provides convenient

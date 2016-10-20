@@ -135,7 +135,7 @@ class JobRouterFactory
     {
         // I've made the mistake myself, so let's allow both dashes and
         // underscores in the worker type.
-        $type = str_replace('_', '-', $type);
+        $type = str_replace('-', '_', $type);
         try {
             $workerType = WorkerType::getByValue($type);
             return $workerType;

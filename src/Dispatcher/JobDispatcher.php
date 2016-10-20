@@ -195,8 +195,8 @@ class JobDispatcher implements JobDispatcherInterface
      * This allows us to start the non-blocking calls first, then handle
      * the blocking ones and then get back to the non-blocking and wait for them.
      *
-     * Potentially non-blocking calls are HTTP, CLI and PHP-CLI.
-     * Blocking calls are of the PHP type.
+     * Potentially non-blocking calls are HTTP, CLI and isolated PHP workers.
+     * Inline PHP workers are blocking.
      *
      * I tried to use the usort() function but found this manual sorting
      * to be easier to read and understand in this case.

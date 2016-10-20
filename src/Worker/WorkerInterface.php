@@ -26,21 +26,21 @@ use Disqontrol\Job\JobInterface;
  *
  * If you want a PHP worker to be called directly by Disqontrol:
  *
- * - Write the PHP worker
- * - Write a WorkerBuilder for the worker
+ * - Write a PHP worker
+ * - Write a WorkerFactory for the worker
  * - Extract the setup code needed to set up the environment for the workers
- * - During Disqontrol's bootstrap, create a new WorkerRepository
- * - Register the worker setup code with the repository
- * - Register all worker builders
- * - Inject the WorkerRepository into Disqontrol
+ * - During Disqontrol's bootstrap, create a new WorkerFactoryCollection
+ * - Register the worker setup code with the collection
+ * - Add all worker factories
+ * - Inject the WorkerFactoryCollection into Disqontrol
  *
  * The worker setup code will be called just once and only if your PHP worker
  * is actually needed to perform a job.
  *
- * Disqontrol will then ask the proper WorkerBuilder for the worker.
+ * Disqontrol will then ask the proper WorkerFactory for the worker.
  *
- * @see WorkerRepositoryInterface
- * @see WorkerBuilderInterface
+ * @see WorkerFactoryCollectionInterface
+ * @see WorkerFactoryInterface
  *
  * @author Martin Schlemmer
  */
