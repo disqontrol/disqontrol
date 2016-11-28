@@ -42,6 +42,11 @@ class Configuration
     private $undefinedQueues;
 
     /**
+     * @var string A path to the current bootstrap file
+     */
+    private $bootstrapFilePath;
+
+    /**
      * @param array $config
      */
     public function __construct(array $config)
@@ -341,6 +346,22 @@ class Configuration
     public function getUndefinedQueues()
     {
         return $this->undefinedQueues;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBootstrapFilePath()
+    {
+        return $this->bootstrapFilePath;
+    }
+
+    /**
+     * @param string $bootstrapFilePath
+     */
+    public function setBootstrapFilePath($bootstrapFilePath)
+    {
+        $this->bootstrapFilePath = $bootstrapFilePath;
     }
 
     /**

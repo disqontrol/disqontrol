@@ -40,6 +40,11 @@ class DisqontrolApplication
     private $debug;
 
     /**
+     * @var string A path to the bootstrap file
+     */
+    private $bootstrapFile = self::DEFAULT_BOOTSTRAP_PATH;
+
+    /**
      * Run the whole application
      *
      * @param array $argv
@@ -73,6 +78,7 @@ class DisqontrolApplication
         $bootstrapArgIndex = $this->findArgumentIndex(self::BOOTSTRAP_ARGUMENT);
         if ($bootstrapArgIndex !== false) {
             $bootstrapFile = $this->getArgumentValue($bootstrapArgIndex);
+            $this->bootstrapFile = $bootstrapFile;
             if (! file_exists($bootstrapFile)) {
                 throw \Disqontrol\Exception\FilesystemException::fileNotFound(
                     'bootstrap', $bootstrapFile
@@ -136,6 +142,10 @@ class DisqontrolApplication
         $this->addGlobalBootstrapArgument($application);
 
         $container = $this->disqontrol->getContainer();
+
+        $configuration = $container->get('configuration');
+        $configuration->setBootstrapFilePath($this->bootstrapFile);
+
         $commandIds = $container->getParameter(
             \Disqontrol\Disqontrol::CONTAINER_COMMANDS_KEY
         );
