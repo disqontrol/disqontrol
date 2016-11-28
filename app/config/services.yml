@@ -188,6 +188,7 @@ services:
     process_spawner:
         class: Disqontrol\Consumer\Process\ConsumerProcessSpawner
         arguments:
+            - "@=service('configuration').getBootstrapFilePath()"
             - '@logger'
 
     autoscale_algorithm_factory:

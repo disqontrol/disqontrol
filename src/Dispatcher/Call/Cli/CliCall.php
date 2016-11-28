@@ -26,7 +26,16 @@ use RuntimeException;
  */
 class CliCall extends AbstractCall implements CallInterface
 {
-    const COMMAND = '%s --body=%s --metadata=%s';
+    /**
+     * Names of the command line arguments
+     */
+    const ARGUMENT_BODY = 'body';
+    const ARGUMENT_METADATA = 'metadata';
+
+    /**
+     * The command pattern
+     */
+    const COMMAND = '%s --' . self::ARGUMENT_BODY . '=%s --' . self::ARGUMENT_METADATA . '=%s';
 
     /**
      * The system process used for this CLI call
