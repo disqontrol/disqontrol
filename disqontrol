@@ -1,6 +1,9 @@
 #!/usr/bin/env php
 <?php
 
+use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Input\InputOption;
+
 $disqontrolApplication = new DisqontrolApplication($argv);
 
 /**
@@ -12,9 +15,11 @@ $disqontrolApplication = new DisqontrolApplication($argv);
  * 4) run symfony console application
  *
  * @author Martin Patera <mzstic@gmail.com>
+ * @author Martin Schlemmer
  */
 class DisqontrolApplication
 {
+    const BOOTSTRAP_ARGUMENT = 'bootstrap';
     const DEFAULT_BOOTSTRAP_PATH = 'bootstrap_disqontrol.php';
     const VERBOSITY_DEBUG = 3;
 
@@ -65,7 +70,7 @@ class DisqontrolApplication
      */
     private function loadBootstrap() {
         $disqontrol = null;
-        $bootstrapArgIndex = $this->findArgumentIndex('bootstrap');
+        $bootstrapArgIndex = $this->findArgumentIndex(self::BOOTSTRAP_ARGUMENT);
         if ($bootstrapArgIndex !== false) {
             $bootstrapFile = $this->getArgumentValue($bootstrapArgIndex);
             if (! file_exists($bootstrapFile)) {
@@ -121,11 +126,15 @@ class DisqontrolApplication
      *
      * @throws Exception
      */
-    private function runApplication() {
-        $application = new Symfony\Component\Console\Application(
+    private function runApplication()
+    {
+        $application = new Application(
             \Disqontrol\Disqontrol::NAME,
             \Disqontrol\Disqontrol::VERSION
         );
+
+        $this->addGlobalBootstrapArgument($application);
+
         $container = $this->disqontrol->getContainer();
         $commandIds = $container->getParameter(
             \Disqontrol\Disqontrol::CONTAINER_COMMANDS_KEY
@@ -137,7 +146,29 @@ class DisqontrolApplication
     }
 
     /**
-     * Is command executed in debug mode?
+     * Add a console argument --bootstrap to all commands by default
+     *
+     * This doesn't have an effect inside the commands because it is processed
+     * here, before the application is run. Its purpose is to add the argument
+     * to the command help so that users understand that it exists.
+     *
+     * @param Application $application
+     */
+    private function addGlobalBootstrapArgument(Application $application)
+    {
+        $appDefinition = $application->getDefinition();
+        $name = self::BOOTSTRAP_ARGUMENT;
+        $shortcut = null;
+        $mode = InputOption::VALUE_OPTIONAL;
+        $description = 'Path to the bootstrap file. The file must return a Disqontrol instance';
+        $defaultValue = null;
+
+        $newOption = new InputOption($name, $shortcut, $mode, $description, $defaultValue);
+        $appDefinition->addOption($newOption);
+    }
+
+    /**
+     * Is the command executed in the debug mode?
      *
      * Check for --verbose=3 option set or -vvv short option.
      *
