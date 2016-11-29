@@ -10,8 +10,10 @@
 
 namespace Disqontrol\Consumer\Process;
 
+use Disqontrol\Console\Command\ConsumerCommand;
 use Psr\Log\LoggerInterface;
 use Disqontrol\Logger\MessageFormatter as Msg;
+use Disqontrol\DisqontrolApplication;
 
 /**
  * Spawn a new consumer process
@@ -22,19 +24,33 @@ class ConsumerProcessSpawner
 {
     /**
      * @var string A sprintf pattern for the consumer command
+     *
+     * disqontrol consumer --batch=2 [--burst] foo-queue --bootstrap=foo.php
      */
-    const CONSUMER_CMD = './disqontrol consumer --batch=%1$d %2$s %3$s';
+    const CONSUMER_CMD = './disqontrol ' . ConsumerCommand::COMMAND_NAME .
+        ' --' . ConsumerCommand::OPTION_BATCH . '=%1$d %2$s %3$s';
+
+    const BOOTSTRAP_ARGUMENT = ' --' . DisqontrolApplication::BOOTSTRAP_ARGUMENT . '=%4$s';
     
     /**
      * @var LoggerInterface
      */
     private $logger;
+
+    /**
+     * @var string Path to the bootstrap file
+     */
+    private $bootstrapFilePath;
     
     /**
+     * @param string          $bootstrapFilePath
      * @param LoggerInterface $logger
      */
-    public function __construct(LoggerInterface $logger)
-    {
+    public function __construct(
+        $bootstrapFilePath,
+        LoggerInterface $logger
+    ) {
+        $this->bootstrapFilePath = $bootstrapFilePath;
         $this->logger = $logger;
     }
     
@@ -55,13 +71,24 @@ class ConsumerProcessSpawner
 
         $burstArgument = '';
         if ($burstMode) {
-            $burstArgument = '--burst';
+            $burstArgument = '--' . ConsumerCommand::OPTION_BURST;
         }
 
         $queues = implode(' ', $queues);
 
+        $cmdPattern = self::CONSUMER_CMD;
+        if( ! empty($this->bootstrapFilePath)) {
+            $cmdPattern .= self::BOOTSTRAP_ARGUMENT;
+        }
+
         // @todo Run the consumer in debug mode if supervisor is in debug mode?
-        $cmd = sprintf(self::CONSUMER_CMD, $jobBatch, $burstArgument, $queues);
+        $cmd = sprintf(
+            $cmdPattern,
+            $jobBatch,
+            $burstArgument,
+            $queues,
+            $this->bootstrapFilePath
+        );
         
         $this->logger->debug(Msg::startingConsumerProcess($cmd));
 

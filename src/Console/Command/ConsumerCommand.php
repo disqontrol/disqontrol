@@ -40,6 +40,7 @@ class ConsumerCommand extends Command
     /**
      * Names of the command options and arguments
      */
+    const COMMAND_NAME = 'consumer';
     const OPTION_BATCH = 'batch';
     const OPTION_BATCH_SHORT = 'b';
     const OPTION_BURST = 'burst';
@@ -87,7 +88,7 @@ class ConsumerCommand extends Command
     protected function configure()
     {
         $this
-            ->setName('consumer')
+            ->setName(self::COMMAND_NAME)
             ->setDescription('Start a job consumer');
 
         $defaultBatch = $this->config->getConsumerDefaults()[Config::JOB_BATCH];
