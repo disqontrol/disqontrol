@@ -41,6 +41,7 @@ class MessageFormatter
     const SUPERVISOR_SPAWNED_PROCESS_GROUP = 'Supervisor spawned a consumer process group for queues %s';
     const SUPERVISOR_SPAWNED_DEFAULT_PROCESS_GROUP = 'Supervisor spawned a default consumer process group for queues %s';
     const SCHEDULER_RUNS_JOB = 'Scheduler is running %s';
+    const ISOLATED_PHP_WORKER_FAILED = 'The PHP worker %s failed when processing job %s in a separate process. %s';
 
     /**
      * Exception messages
@@ -50,9 +51,13 @@ class MessageFormatter
     const FAILED_DESERIALIZE_JOB_BODY = 'Failed to deserialize job body. %s';
     const UNKNOWN_WORKER_TYPE = 'Unknown worker type %s in the configuration file';
     const JOB_WORKER_NOT_FOUND = 'Cannot find a proper worker for job %s coming from queue "%s"';
+    const PHP_JOB_WORKER_NOT_FOUND = 'Cannot find a PHP worker with the name "%s"';
+    const PHP_JOB_WORKER_FROM_CONFIGURATION_NOT_FOUND = 'The configuration defines a PHP worker "%s" which hasn\'t been found
+in the WorkerFactoryCollection when instantiating Disqontrol.';
     const UNDEFINED_QUEUES_IN_CONSUMER_CONFIG = 'Consumers are configured for undefined queues: %s';
     const MISSING_CRONTAB_PATH = 'Add a path to the crontab file';
     const FILE_NOT_FOUND = 'The file "%s" was not found';
+    const WORKER_COMMAND_MISSING_PARAMETERS = 'The %s command is missing one or more required parameters (queue, body, metadata)';
 
     /**
      * Helper template
@@ -309,6 +314,8 @@ class MessageFormatter
     }
 
     /**
+     * Job worker not found in the job router
+     *
      * @param string $jobId
      * @param string $queue
      * @param string $originalJobId
@@ -322,6 +329,30 @@ class MessageFormatter
             self::formatJobId($jobId, $originalJobId),
             $queue
         );
+    }
+
+    /**
+     * A PHP worker was not found in the WorkerFactoryCollection
+     *
+     * @param string $workerName
+     *
+     * @return string
+     */
+    public static function phpJobWorkerNotFound($workerName)
+    {
+        return sprintf(self::PHP_JOB_WORKER_NOT_FOUND, $workerName);
+    }
+
+    /**
+     * A PHP worker that is defined in the config was not registered during startup
+     *
+     * @param string $workerName
+     *
+     * @return string
+     */
+    public static function phpJobWorkerFromConfigurationNotFound($workerName)
+    {
+        return sprintf(self::PHP_JOB_WORKER_FROM_CONFIGURATION_NOT_FOUND, $workerName);
     }
 
     /**
@@ -510,6 +541,37 @@ class MessageFormatter
     public static function fileNotFound($path)
     {
         return sprintf(self::FILE_NOT_FOUND, $path);
+    }
+
+    /**
+     * The isolated PHP worker failed when processing a job
+     *
+     * @param string $workerName
+     * @param string $jobId
+     * @param string $errMsg
+     *
+     * @return string
+     */
+    public static function isolatedPhpWorkerFailed($workerName, $jobId, $errMsg)
+    {
+        return sprintf(
+            self::ISOLATED_PHP_WORKER_FAILED,
+            $workerName,
+            $jobId,
+            $errMsg
+        );
+    }
+
+    /**
+     * The worker command is missing parameters queue, body, metadata
+     *
+     * @param string $commandName
+     *
+     * @return string
+     */
+    public static function workerCommandMissingParameters($commandName)
+    {
+        return sprintf(self::WORKER_COMMAND_MISSING_PARAMETERS, $commandName);
     }
 
     /**

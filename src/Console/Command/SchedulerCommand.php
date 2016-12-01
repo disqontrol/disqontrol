@@ -44,7 +44,7 @@ Run the scheduler every minute by adding this entry to your system crontab:
 
 <info>* * * * * /path/to/disqontrol scheduler --crontab=/path/to/crontab >/dev/null 2>&1</info>
 
-A crontab row has the following syntax:
+A Disqontrol crontab row has the following syntax:
 
 <info>* * * * * queue job-body</info>
 
@@ -115,7 +115,7 @@ HEREDOC;
     {
         $this
             ->setName('scheduler')
-            ->setDescription('Run a job scheduler')
+            ->setDescription('Run the job scheduler. Run this command every minute.')
             ->setHelp(self::HELP)
             ->addOption(
                 self::OPTION_CRONTAB,

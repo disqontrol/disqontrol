@@ -16,6 +16,9 @@ use Disqontrol\Configuration\FailureStrategiesCompilerPass;
 use Disqontrol\Exception\ConfigurationException;
 use Disqontrol\Exception\FilesystemException;
 use Disqontrol\Logger\LineFormatter;
+use Disqontrol\Logger\MessageFormatter as msg;
+use Disqontrol\Worker\WorkerFactoryCollection;
+use Disqontrol\Worker\WorkerFactoryCollectionInterface;
 use Disque\Client;
 use Disqontrol\Producer\ProducerInterface;
 use Disqontrol\Consumer\ConsumerInterface;
@@ -34,19 +37,19 @@ use Symfony\Component\EventDispatcher\DependencyInjection\RegisterListenersPass;
 use Symfony\Component\Yaml\Yaml;
 
 /**
- * Main Disqontrol class
+ * The main Disqontrol class
  *
- * This is public interface between Disqontrol and other code.
+ * This is the public interface between Disqontrol and other code.
  * You can use events to hook into other classes, for more information
- * see documentation.
+ * see the documentation.
  *
- * This place also maintains DI container and handles its creation,
+ * This place also maintains the DI container and handles its creation,
  * caching, building etc.
  *
  * @author Martin Patera <mzstic@gmail.com>
  * @author Martin Schlemmer
  */
-final class Disqontrol
+class Disqontrol
 {
     /**
      * The application name and version
@@ -76,6 +79,13 @@ final class Disqontrol
     const EVENT_DISPATCHER_SERVICE = 'event_dispatcher';
 
     /**
+     * A collection of worker factories that can create PHP workers
+     *
+     * @var WorkerFactoryCollectionInterface
+     */
+    private $workerFactoryCollection;
+
+    /**
      * Is Disqontrol running in debug mode?
      *
      * @var bool
@@ -98,23 +108,26 @@ final class Disqontrol
     private $configParams;
 
     /**
-     * If no config file is specified, default config is used instead.
+     * If no config file path is specified, the default config path is used instead
      *
      * @see self::DEFAULT_CONFIG_PATH
      *
-     * @param string $configFile
-     * @param bool   $debug
+     * @param string|null                           $configFilePath
+     * @param WorkerFactoryCollectionInterface|null $workerFactoryCollection
+     * @param bool                                  $debug
+     *
+     * @throws ConfigurationException
      */
     public function __construct(
-        $configFile = null,
+        $configFilePath = null,
+        WorkerFactoryCollectionInterface $workerFactoryCollection = null,
         $debug = false
-    )
-    {
+    ) {
         $this->debug = $debug;
-        $this->processConfig($configFile);
+        $this->processConfig($configFilePath);
         $this->initializeContainer();
-
         $this->prepareLogger();
+        $this->preparePhpWorkers($workerFactoryCollection);
     }
 
     /**
@@ -162,6 +175,14 @@ final class Disqontrol
     public function getConsumer()
     {
         // @TODO implement.
+    }
+    
+    /**
+     * @return WorkerFactoryCollectionInterface|null
+     */
+    public function getWorkerFactoryCollection()
+    {
+        return $this->workerFactoryCollection;
     }
 
     /**
@@ -218,11 +239,13 @@ final class Disqontrol
         $container->addCompilerPass(new ConsoleCommandsCompilerPass());
         $container->addCompilerPass(new FailureStrategiesCompilerPass());
 
-        $container->addCompilerPass(new RegisterListenersPass(
-            self::EVENT_DISPATCHER_SERVICE,
-            self::EVENT_LISTENER_TAG,
-            self::EVENT_SUBSCRIBER_TAG
-        ));
+        $container->addCompilerPass(
+            new RegisterListenersPass(
+                self::EVENT_DISPATCHER_SERVICE,
+                self::EVENT_LISTENER_TAG,
+                self::EVENT_SUBSCRIBER_TAG
+            )
+        );
 
         return $container;
     }
@@ -357,6 +380,43 @@ final class Disqontrol
     private function getLogDir()
     {
         return $this->configParams[ConfigDefinition::LOG_DIR];
+    }
+
+    /**
+     * Prepare the WorkerFactoryCollection and check we know all PHP workers
+     *
+     * @param WorkerFactoryCollectionInterface $workerFactoryCollection
+     *
+     * @throws ConfigurationException
+     */
+    private function preparePhpWorkers(
+        WorkerFactoryCollectionInterface $workerFactoryCollection = null
+    ) {
+        if ($workerFactoryCollection === null) {
+            $workerFactoryCollection = new WorkerFactoryCollection();
+        }
+
+        $this->workerFactoryCollection = $workerFactoryCollection;
+        $config = $this->container->get('configuration');
+        $phpWorkers = $config->getPhpWorkers();
+
+        foreach ($phpWorkers as $workerName) {
+            if ( ! $workerFactoryCollection->workerExists($workerName)) {
+                // We're missing a PHP worker we might need. Warn the user
+                // in the STD_ERR but don't quit, otherwise for example
+                // the help command won't work.
+    
+                $warning = msg::phpJobWorkerFromConfigurationNotFound($workerName);
+                // We presume the user is sitting at the terminal right now
+                file_put_contents('php://stderr', $warning . PHP_EOL);
+                // But we also don't want him to miss the message in case he
+                // doesn't see it.
+                $logger = $this->container->get('monolog_logger');
+                $logger->warn($warning);
+
+            }
+        }
+
     }
 
 }

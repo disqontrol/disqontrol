@@ -20,11 +20,4 @@ class FilesystemException extends \RuntimeException
     {
         return static::directoryProblem($dir, $name, 'write');
     }
-
-    public static function fileNotFound($file, $name)
-    {
-        return new static(
-            sprintf("%s file (%s) does not exist.", ucfirst($name), $file)
-        );
-    }
 }

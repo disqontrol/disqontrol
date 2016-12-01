@@ -11,7 +11,7 @@
 namespace Disqontrol\Configuration;
 
 use Disqontrol\Configuration\ConfigDefinition as Config;
-use Disqontrol\Dispatcher\Failure\FailureStrategyInterface;
+use Disqontrol\Worker\WorkerType;
 
 /**
  * The Disqontrol configuration wrapped in an object
@@ -362,6 +362,29 @@ class Configuration
     public function setBootstrapFilePath($bootstrapFilePath)
     {
         $this->bootstrapFilePath = $bootstrapFilePath;
+    }
+
+    /**
+     * Get all PHP workers defined in the configuration
+     *
+     * @return string[] Array with the workers' names
+     */
+    public function getPhpWorkers()
+    {
+        $phpWorkers = array();
+
+        foreach ($this->getQueuesConfig() as $queue) {
+            $worker = $queue[Config::WORKER];
+            foreach ($worker as $key => $value) {
+                $possibleWorkerType = str_replace('-', '_', $key);
+                if ($possibleWorkerType === WorkerType::INLINE_PHP_WORKER
+                || $possibleWorkerType === WorkerType::ISOLATED_PHP_WORKER) {
+                    $phpWorkers[] = $value;
+                }
+            }
+        }
+
+        return $phpWorkers;
     }
 
     /**

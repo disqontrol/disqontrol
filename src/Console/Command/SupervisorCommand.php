@@ -52,6 +52,6 @@ class SupervisorCommand extends Command
     {
         $this
             ->setName('supervisor')
-            ->setDescription('Start the Disqontrol supervisor');
+            ->setDescription('Start the Disqontrol supervisor. Keep this command running all the time.');
     }
 }

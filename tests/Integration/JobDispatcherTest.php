@@ -17,6 +17,7 @@ use Disqontrol\Event\JobRouteEvent;
 use Disqontrol\Job\Job;
 use Disqontrol\Router\SimpleRoute;
 use Disqontrol\Router\WorkerDirections;
+use Disqontrol\Worker\WorkerFactoryCollection;
 use Disqontrol\Worker\WorkerType;
 use Psr\Log\NullLogger;
 use Symfony\Component\Config\Definition\Processor;
@@ -63,6 +64,7 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
      * Names of services in the service container
      */
     const SERVICE_DISQUE = 'disque';
+    const SERVICE_DISQONTROL = 'disqontrol';
     const SERVICE_CALL_FACTORY = 'call_factory';
     const SERVICE_LOGGER = 'logger';
     const SERVICE_PROCESS_FACTORY = 'process_factory';
@@ -503,6 +505,13 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
             $logger = new NullLogger();
         }
         $container->set(self::SERVICE_LOGGER, $logger);
+
+        $workerFactoryCollection = new WorkerFactoryCollection();
+        $disqontrol = m::mock(Disqontrol::class)
+            ->shouldReceive('getWorkerFactoryCollection')
+            ->andReturn($workerFactoryCollection)
+            ->getMock();
+        $container->set(self::SERVICE_DISQONTROL, $disqontrol);
 
         $container->compile();
         $this->container = $container;

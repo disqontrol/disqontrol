@@ -19,7 +19,6 @@ With Disqontrol you get the following features:
 - Run multiple jobs from one queue in parallel
 - Switch automatically to the best Disque node
 - Switch to synchronous mode for debugging (process new jobs immediately)
-  (synchronous mode is available only for PHP workers)
 
 Workers can be called via a console command or a HTTP request and can therefore
 be written in other languages than PHP. The library also provides convenient
@@ -28,6 +27,30 @@ wrappers for workers written in PHP.
 The goal of Disqontrol is to be a user-friendly, clean and robust tool.
 
 Disqontrol follows semantic versioning.
+
+## Basic structure
+
+We have thought about the terminology and tried to make it as clear as possible.
+We have taken into account how others, especially Disque, use the words.
+
+`Job` is anything you need to identify the work you need to do. It can be
+a simple integer ID or a whole array of data.
+`Queue` is a channel on which `Jobs` of a particular type are published. E.g.
+'email-registration' or 'avatar-resize'. It can also mean the whole Disque.
+`Producer` is a class or a command you use in your application to add jobs
+to the queue for later processing.
+`Consumer` is a long-running process that listens to one or more queues,
+fetches jobs from them, calls workers and decides what to do with failed jobs.
+`Worker` is the code that receives the job and does the actual work.
+A worker can be PHP code called directly by the `Consumer`, a console command
+or a service listening for HTTP calls (e.g. a REST API).
+`Supervisor` is the top level command that ties it all together. It loads
+the configuration and starts all `Consumers` as needed.
+`Scheduler` is a command that takes care of scheduled tasks. It should run
+every minute via cron.
+
+These are the basic terms you need to use Disqontrol. Inside Disqontrol there
+are a few more terms that will be explained where needed.
 
 ## Usage
 
@@ -67,11 +90,15 @@ $disqontrol = new Disqontrol\Disqontrol();
 
 #### From a non-PHP application
 
-### Regular (repeated) jobs
+### Regular, repeated jobs
 
 Disqontrol supports regular, repeated jobs. To set up regular jobs, you have to
 - create a Disqontrol crontab
 - run the Disqontrol scheduler every minute from the system cron
+
+You can also of course use the system crontab. Running scheduled jobs over
+Disqontrol allows you to version your crontab in your code repository
+and deploy the changes simply by deploying your code.
 
 A Disqontrol crontab row has the following syntax:
 
@@ -97,12 +124,168 @@ Run the scheduler every minute by adding this entry to your system crontab:
 
 `* * * * * /path/to/disqontrol scheduler --crontab=/path/to/crontab >/dev/null 2>&1`
 
-You can of course run your jobs by adding them directly to the system
-crontab. Running them through Disqontrol allows you to add the job crontab
-to your application's directory and version it along with your code.
-
 ### What happens with failed jobs?
 
+
+### Using PHP workers
+
+PHP workers are workers (code that processes jobs) written in PHP and called
+directly via Disqontrol.
+
+You can of course write workers in any language (including PHP) and call them
+via the command line (or HTTP), but we call these "CLI/HTTP workers" - they are
+completely independent of Disqontrol.
+
+But because Disqontrol is written in PHP, it offers a few helper features
+to write PHP workers more quickly and easily.
+
+
+#### Inline vs. isolated PHP workers
+
+There are two types of PHP workers - inline PHP workers and isolated PHP workers.
+
+The difference between them is simple: If the Consumer, the long-running
+process that listens for new jobs, receives a job that should be processed
+by an inline PHP worker, the worker is called directly in the Consumer process.
+
+If the job should be processed by an isolated PHP worker, the worker is called
+in a separate process created only for this one job.
+
+The advantage of isolated PHP workers is that there can be no memory leaks.
+The worker exits after it processes the job.
+
+The advantage of inline PHP workers is that they are potentially faster and
+require less computing capacity. Unlike isolated PHP workers they don't
+have to set up the environment (DB connection etc.) over and over again.
+
+It's up to you to choose the tradeoffs. PHP workers running just with
+few dependencies, in a lightweight environment, are probably better off
+when called inline. Heavy workers that need a connection to the DB, to the cache
+and to other external services, are probably safer to run in separate processes.
+
+Fortunately you can switch between using isolated and inline PHP workers just by
+changing a single word in the configuration file and easily test what's better
+for your particular situation.
+
+
+#### Writing PHP workers
+
+PHP workers must implement the `Disqontrol\Worker\WorkerInterface`.
+Each worker needs its own factory. A factory's purpose is to return a worker.
+Worker factories must implement the `Disqontrol\Worker\WorkerFactoryInterface`.
+
+Worker factories and workers live outside of your application and don't have
+an immediate access to your application environment.
+
+"Environment" in this case means the connection to the database and to the cache,
+the configuration and service container etc.
+
+To provide your workers and worker factories with the environment, write
+a piece of code that sets up your environment. It can be as short as
+
+``` php
+require_once 'my_application_bootstrap.php';
+```
+
+Wrap it in an anonymous function and make it return the entry point
+into your application environment, most likely a service container:
+
+``` php
+$environmentSetup = function() {
+    require_once 'my_application_bootstrap.php';
+    global $serviceContainer;
+    return $serviceContainer;
+}
+```
+
+The WorkerFactoryInterface that all worker factories must implement has
+a peculiar method signature:
+
+``` php
+public method create($workerEnvironment);
+```
+
+Your worker factories live outside of your code, but before they are asked
+to return a worker, they will receive your environment. What they receive is
+exactly what we returned in the anonymous function above (in our example it
+would be the variable `$serviceContainer`).
+
+Why is the environment setup code separate and why is this so complicated?
+The reason for this is that Disqontrol starts a few long running processes.
+In order for them to be as small as possible and in order to minimize memory
+leaks, we don't want to start up the whole application environment
+(DB connection etc.) unless it's absolutely necessary. For example
+the Disqontrol Supervisor doesn't need your application environment at all.
+The Consumers may or may not need it (only those that must call inline PHP
+workers).
+
+To summarize:
+
+The environment setup code is registered with Disqontrol, but it is only
+called when it is needed (and only once). Its result is then injected into each
+worker factory.
+
+
+#### Registering PHP workers and the environment setup code in Disqontrol
+
+If you want to use PHP workers - whether run inline directly in Consumer, 
+or in a separate process - you need to connect your PHP application
+and Disqontrol.
+
+Disqontrol is used in two ways:
+- It is a library that you use in your PHP application
+- And it is itself an application run via the command line
+
+You must create the connection for both of these cases.
+
+The connection has 4 steps:
+
+1. Instantiate a WorkerFactoryCollection
+2. Write and register a code that sets up the environment for your PHP workers.
+We talked about what the code should look like in the previous section.
+3. Instantiate and register worker factories for all your PHP workers
+4. Create a new Disqontrol instance where you put it all together
+
+An abridged version could look like this:
+
+``` php
+$workerFactoryCollection = new Disqontrol\Worker\WorkerFactoryCollection();
+
+$workerEnvironmentSetup = function() {
+    require_once 'application_bootstrap.php';
+    global $serviceContainer;
+    return $serviceContainer;
+};
+$workerFactoryCollection->registerWorkerEnvironmentSetup($workerEnvironmentSetup);
+
+$picResizeWorkerFactory = new ExampleWorkerFactory();
+$workerFactoryCollection->addWorkerFactory('PicResizeWorker', $picResizeWorkerFactory);
+
+$disqontrol = new Disqontrol\Disqontrol($configFile, $workerFactoryCollection, $debug);
+return $disqontrol;
+```
+
+Save this code in a file, let's call it the Disqontrol bootstrap file.
+
+NOTE: For a longer and commented example, see `examples/disqontrol_bootstrap.php`
+
+When running Disqontrol as a command line application, tell it what bootstrap
+file it should use by adding the argument "--bootstrap":
+
+``` bash
+disqontrol supervisor --bootstrap=/file/to/disqontrol_bootstrap.php
+```
+
+If you name the bootstrap file `disqontrol_bootstrap.php` and place it
+in the working directory (the directory from which you call Disqontrol),
+it will be used automatically, without the need to explicitly specify its path.
+With the bootstrap file in its default location, you can then call just this:
+
+```bash
+disqontrol supervisor
+```
+
+Disqontrol will look for `disqontrol_bootstrap.php` and use it automatically.
 
 ### Extending the functionality via Events
 
@@ -125,39 +308,6 @@ to make. For example
 Disqontrol answers these questions for you and helps you implement a robust
 job queue in your application, while giving you enough flexibility
 to configure everything to your particular needs.
-
-### Terminology
-
-If you dive into the world of queues, one thing becomes immediately apparent.
-The terminology is all over the place. General message queues tend to talk
-about Publishers, Subscribers and Messages while job queues tend to use Producers,
-Consumers and Jobs (or Tasks). Some libraries don't distinguish the long-running
-process listening to the queue from the code working on one particular job and
-talk about Workers spawning child Workers. And yet others make up their own 
-unique names and call Producers "Dispatchers".
-
-It's chaos.
-
-We have thought long and hard about the terminology and tried to make it as clear
-as possible. We have taken into account how others, especially Disque, use
-the words.
-
-`Job` is anything you need to identify the work you need to do. It can be
-a simple integer ID or a whole array of data.
-`Queue` is a channel on which `Jobs` of a particular type are published. E.g.
-'email-registration' or 'avatar-resize'. It can also mean the whole of Disque.
-`Producer` is a class or a command you use in your application to add jobs
-to the queue for later processing.
-`Consumer` is a long-running process that listens to one or more queues,
-fetches jobs from them, calls workers and decides what to do with failed jobs.
-`Worker` is the code that receives the job and does the actual work.
-A worker can be PHP code called directly by the `Consumer`, a console command
-or a service listening for HTTP calls (e.g. a REST API).
-`Supervisor` is the top level command that ties it all together. It loads
-the configuration and starts all `Consumers` as needed.
-
-These are the basic terms you need to use Disqontrol. Inside Disqontrol there
-are a few more terms that will be explained where needed.
 
 ### Why Disque?
 

@@ -10,6 +10,8 @@
 
 namespace Disqontrol\Worker;
 
+use Disqontrol\Exception\ConfigurationException;
+
 /**
  * A collection of user-written PHP workers Disqontrol can use
  *
@@ -98,6 +100,15 @@ interface WorkerFactoryCollectionInterface
     public function registerWorkerEnvironmentSetup(callable $workerSetup);
     
     /**
+     * Check if the worker exists, without setting up the environment
+     *
+     * @param string $workerName
+     *
+     * @return bool
+     */
+    public function workerExists($workerName);
+
+    /**
      * Get the worker defined under the given name
      *
      * This method is called by Disqontrol to fetch the PHP worker responsible
@@ -108,6 +119,8 @@ interface WorkerFactoryCollectionInterface
      * @param string $workerName
      *
      * @return WorkerInterface $worker
+     *
+     * @throws ConfigurationException
      */
     public function getWorker($workerName);
 }

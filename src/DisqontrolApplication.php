@@ -1,12 +1,4 @@
 <?php
-namespace Disqontrol;
-
-use Symfony\Component\Console\Application;
-use Symfony\Component\Console\Input\InputOption;
-use Exception;
-use UnexpectedValueException;
-use RuntimeException;
-
 /*
 * This file is part of the Disqontrol package.
 *
@@ -15,13 +7,22 @@ use RuntimeException;
 * For the full copyright and license information, please view the LICENSE
 * file that was distributed with this source code.
 */
+
+namespace Disqontrol;
+
+use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Input\InputOption;
+use Exception;
+use UnexpectedValueException;
+use RuntimeException;
+
 /**
- * Prepare and run whole Disqontrol application.
+ * Prepare and run the Disqontrol command-line application
  *
- * 1) load bootstrap
- * 2) include autoload
- * 3) create Disqontrol instance
- * 4) run symfony console application
+ * 1) Load the bootstrap file
+ * 2) Include autoload
+ * 3) Create a Disqontrol instance
+ * 4) Run the Symfony console application
  *
  * @author Martin Patera <mzstic@gmail.com>
  * @author Martin Schlemmer
@@ -29,11 +30,12 @@ use RuntimeException;
 class DisqontrolApplication
 {
     const BOOTSTRAP_ARGUMENT = 'bootstrap';
-    const DEFAULT_BOOTSTRAP_PATH = 'bootstrap_disqontrol.php';
+    const DEFAULT_BOOTSTRAP_PATH = 'disqontrol_bootstrap.php';
     const VERBOSITY_DEBUG = 3;
 
     /**
      * Input arguments of the script
+     *
      * @var array
      */
     private $argv;
@@ -57,38 +59,44 @@ class DisqontrolApplication
      * Run the whole application
      *
      * @param array $argv
-     *
-     * @throws Exception
      */
     public function __construct(array $argv)
     {
         $this->argv = $argv;
-        $this->disqontrol = $this->loadBootstrap();
-        $this->includeAutoload();
-        if ($this->disqontrol === null) {
-            $this->disqontrol = $this->createDisqontrol();
+        try {
+            $this->includeAutoload();
+            $this->disqontrol = $this->loadBootstrap();
+            if ($this->disqontrol === null) {
+                $this->disqontrol = $this->createDisqontrol();
+            }
+            $this->runApplication();
+        } catch (Exception $e) {
+            file_put_contents('php://stderr', $e->getMessage() . "\n");
+            die(1);
         }
-        $this->runApplication();
     }
 
     /**
-     * Try to load bootstrap.
+     * Try to load the bootstrap file
      *
-     * If bootstrap option specified load that file, otherwise
-     * look for default.
+     * If a bootstrap option is specified, load that file, otherwise
+     * look for the default file.
+     *
+     * @see self::DEFAULT_BOOTSTRAP_PATH
      *
      * @throws \Disqontrol\Exception\FilesystemException
      * @throws UnexpectedValueException
      *
      * @return null|Disqontrol
      */
-    private function loadBootstrap() {
+    private function loadBootstrap()
+    {
         $disqontrol = null;
         $bootstrapArgIndex = $this->findArgumentIndex(self::BOOTSTRAP_ARGUMENT);
         if ($bootstrapArgIndex !== false && ! empty($this->getArgumentValue($bootstrapArgIndex))) {
             $this->bootstrapFile = $this->getArgumentValue($bootstrapArgIndex);
 
-            if (! file_exists($this->bootstrapFile)) {
+            if ( ! file_exists($this->bootstrapFile)) {
                 throw new RuntimeException(
                     'The bootstrap file "' . $this->bootstrapFile . '" has not been found'
                 );
@@ -101,9 +109,12 @@ class DisqontrolApplication
             $disqontrol = require_once self::DEFAULT_BOOTSTRAP_PATH;
         }
 
-        if (($disqontrol !== null) && (! $disqontrol instanceof Disqontrol)) {
+        if (($disqontrol !== null) && ( ! $disqontrol instanceof Disqontrol)) {
             throw new UnexpectedValueException(
-                "Bootstrap must return instance of Disqontrol\\Disqontrol or null."
+                sprintf(
+                    'The bootstrap file "%s" must return an instance of Disqontrol\Disqontrol or null.',
+                    $this->bootstrapFile
+                )
             );
         }
 
@@ -111,18 +122,21 @@ class DisqontrolApplication
     }
 
     /**
-     * Include autoload, location depends on how Disqontrol has been installed.
+     * Include the autoload file
+     *
+     * Its location depends on how Disqontrol has been installed.
      */
-    private function includeAutoload() {
-        if (file_exists(__DIR__.'/../vendor/autoload.php')) {
-            require_once __DIR__.'/../vendor/autoload.php';
-        } else if (file_exists(__DIR__.'/../../../autoload.php')) {
-            require_once __DIR__.'/../../../autoload.php';
+    private function includeAutoload()
+    {
+        if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+            require_once __DIR__ . '/../vendor/autoload.php';
+        } else if (file_exists(__DIR__ . '/../../../autoload.php')) {
+            require_once __DIR__ . '/../../../autoload.php';
         }
     }
 
     /**
-     * Create main Disqontrol class
+     * Create the main Disqontrol object
      *
      * @throws Exception
      *
@@ -136,7 +150,14 @@ class DisqontrolApplication
             $configFile = $this->getArgumentValue($configFileArgIndex);
             $this->removeArgument($configFileArgIndex);
         }
-        $disqontrol = new Disqontrol($configFile, $this->isDebug());
+
+        $workerFactoryCollection = null;
+        $disqontrol = new Disqontrol(
+            $configFile,
+            $workerFactoryCollection,
+            $this->isDebug()
+        );
+
         return $disqontrol;
     }
 
@@ -163,8 +184,10 @@ class DisqontrolApplication
             Disqontrol::CONTAINER_COMMANDS_KEY
         );
         foreach ($commandIds as $commandId) {
-            $application->add($container->get($commandId));
+            $command = $container->get($commandId);
+            $application->add($command);
         }
+
         $application->run();
     }
 
@@ -183,7 +206,7 @@ class DisqontrolApplication
         $name = self::BOOTSTRAP_ARGUMENT;
         $shortcut = null;
         $mode = InputOption::VALUE_OPTIONAL;
-        $description = 'Path to the bootstrap file. The file must return a Disqontrol instance';
+        $description = 'Path to the bootstrap file. The file can return a Disqontrol instance';
         $defaultValue = null;
 
         $newOption = new InputOption($name, $shortcut, $mode, $description, $defaultValue);
@@ -191,7 +214,7 @@ class DisqontrolApplication
     }
 
     /**
-     * Is the command executed in the debug mode?
+     * Is the command being executed in a debug mode?
      *
      * Check for --verbose=3 option set or -vvv short option.
      *
@@ -210,19 +233,21 @@ class DisqontrolApplication
             $shortOptionIndex = array_search('-vvv', $this->argv);
             $this->debug = $shortOptionIndex !== false;
         }
+
         return $this->debug;
     }
 
     /**
-     * Find index of specified argument in $argv array
+     * Find the index of the specified argument in the $argv array
      *
      * @param $argumentName
+     *
      * @return bool|int
      */
     private function findArgumentIndex($argumentName)
     {
         $index = false;
-        $argPrefix = '--'.$argumentName.'=';
+        $argPrefix = '--' . $argumentName . '=';
         $argPrefixLength = strlen($argPrefix);
         foreach ($this->argv as $key => $value) {
             if (substr($value, 0, $argPrefixLength) == $argPrefix) {
@@ -230,15 +255,17 @@ class DisqontrolApplication
                 break;
             }
         }
+
         return $index;
     }
 
     /**
-     * Get value of argument on specified index
+     * Get the value of an argument at the specified index
      *
-     * Arguments are in following format: --argument=value
+     * Arguments are in the following format: --argument=value
      *
      * @param int $index
+     *
      * @return string
      */
     private function getArgumentValue($index)
@@ -247,10 +274,10 @@ class DisqontrolApplication
     }
 
     /**
-     * Unset argument with index $index
+     * Unset the argument with the given index
      *
-     * We need to remove config and bootstrap options from $_SERVER array,
-     * because we don't want symfony application to use them.
+     * We need to remove the config and bootstrap options from the $_SERVER
+     * array, because we don't want the Symfony application to use them.
      *
      * @param int $index
      */

@@ -12,7 +12,7 @@ namespace Disqontrol\Dispatcher\Call\Cli;
 
 use Disqontrol\Dispatcher\Call\AbstractCall;
 use Disqontrol\Dispatcher\Call\CallInterface;
-use Disqontrol\Job\Marshaller\MarshallerInterface;
+use Disqontrol\Job\Serializer\SerializerInterface;
 use Symfony\Component\Process\Process;
 use Disqontrol\Router\WorkerDirectionsInterface;
 use Disqontrol\Job\JobInterface;
@@ -20,6 +20,7 @@ use Disqontrol\Worker\WorkerType;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Exception;
 use RuntimeException;
+use Disqontrol\Console\Command\WorkerCommand;
 
 /**
  * {@inheritdoc}
@@ -34,8 +35,11 @@ class CliCall extends AbstractCall implements CallInterface
 
     /**
      * The command pattern
+     *
+     * Example:
+     * command --queue=foo --body=bar --metadata=baz
      */
-    const COMMAND = '%s --' . self::ARGUMENT_BODY . '=%s --' . self::ARGUMENT_METADATA . '=%s';
+    const COMMAND = '%1$s --' . WorkerCommand::OPTION_QUEUE . '=%2$s --' . self::ARGUMENT_BODY . '=%3$s --' . self::ARGUMENT_METADATA . '=%4$s';
 
     /**
      * The system process used for this CLI call
@@ -52,14 +56,14 @@ class CliCall extends AbstractCall implements CallInterface
     /**
      * @param WorkerDirectionsInterface $directions
      * @param JobInterface              $job
-     * @param MarshallerInterface       $jobMarshaller
+     * @param SerializerInterface       $serializer
      * @param int                       $timeout in seconds
      * @param ProcessFactory            $processFactory
      */
     public function __construct(
         WorkerDirectionsInterface $directions,
         JobInterface $job,
-        MarshallerInterface $jobMarshaller,
+        SerializerInterface $serializer,
         $timeout,
         ProcessFactory $processFactory
     ) {
@@ -77,12 +81,12 @@ class CliCall extends AbstractCall implements CallInterface
 
         try {
             $jobBody = escapeshellarg(
-                $jobMarshaller->marshal(
+                $serializer->serialize(
                     $job->getBody()
                 )
             );
             $jobMetadata = escapeshellarg(
-                $jobMarshaller->marshal(
+                $serializer->serialize(
                     $job->getAllMetadata()
                 )
             );
@@ -90,9 +94,12 @@ class CliCall extends AbstractCall implements CallInterface
             return $this->failEarly($e->getMessage());
         }
 
+        $queue = escapeshellarg($job->getQueue());
+
         $command = sprintf(
             self::COMMAND,
             $directions->getAddress(),
+            $queue,
             $jobBody,
             $jobMetadata
         );
