@@ -14,15 +14,15 @@ Disqontrol is written in PHP and uses [Disque](https://github.com/antirez/disque
 With Disqontrol you get the following features:
 
 - Process jobs in any programming language
-- Run certain jobs regularly
+- Run jobs regularly
 - Handle failures robustly and log as much as you need
 - Run multiple jobs from one queue in parallel
 - Switch automatically to the best Disque node
 - Switch to synchronous mode for debugging (process new jobs immediately)
 
-Workers can be called via a console command or a HTTP request and can therefore
-be written in other languages than PHP. The library also provides convenient
-wrappers for workers written in PHP.
+Workers can be called via a command line or an HTTP request and can therefore
+be written in any language. The library also provides convenient helpers
+for workers written in PHP.
 
 The goal of Disqontrol is to be a user-friendly, clean and robust tool.
 
@@ -89,6 +89,34 @@ $disqontrol = new Disqontrol\Disqontrol();
 #### From a PHP application
 
 #### From a non-PHP application
+
+### Debugging jobs in a synchronous mode
+
+In order to debug jobs during development, you can add jobs synchronously.
+This will skip the job queue altogether and process the job immediately.
+
+You can switch to a synchronous mode easily. In your PHP application, instead
+of calling
+``` php
+$disqontrol->getProducer()->add($job);
+```
+
+call
+
+``` php
+$synchronousMode = true;
+$disqontrol->getProducer($synchronousMode)->add($job);
+```
+
+Failed jobs in the synchronous mode will be logged and thrown away
+(ie. not repeated).
+
+Unlike the normal producer, which cannot know the result, the synchronous
+producer returns the result of the processing of the job:
+
+``` php
+$result = $synchronousProducer->add($job);
+```
 
 ### Regular, repeated jobs
 

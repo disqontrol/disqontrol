@@ -151,32 +151,25 @@ class Disqontrol
     }
 
     /**
-     * Get a queue producer
+     * Get a job producer
      *
      * Producer can send jobs to the queue.
+     * If you set $synchronousMode to true, the method returns a synchronous
+     * producer, that processes the job immediately, skipping Disque.
      *
-     * @param bool $synchronousMode Is synchronous mode on?
+     * @param bool $synchronousMode
      *
      * @return ProducerInterface
      */
     public function getProducer($synchronousMode = false)
     {
-        // TODO Implement a synchronous producer
+        if ($synchronousMode) {
+            return $this->container->get('synchronous_producer');
+        }
+
         return $this->container->get('producer');
     }
 
-    /**
-     * Get a queue consumer
-     *
-     * Consumer can listen to one or more queues.
-     *
-     * @return ConsumerInterface
-     */
-    public function getConsumer()
-    {
-        // @TODO implement.
-    }
-    
     /**
      * @return WorkerFactoryCollectionInterface|null
      */

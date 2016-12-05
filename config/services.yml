@@ -140,19 +140,16 @@ services:
             - '@logger'
 
     # Synchronous services (jobs are processed right away, circumventing Disque)
-    sync_failure_strategy_collection:
-        class: Disqontrol\Dispatcher\Failure\FailureStrategyCollection
-        arguments:
-            - '@configuration'
-        calls:
-            - ['addFailureStrategy', ['@log_and_throw_away']]
-
     sync_dispatcher:
-        class: Disqontrol\Dispatcher\JobDispatcher
+        class: Disqontrol\Dispatcher\SynchronousJobDispatcher
         arguments:
             - '@job_router'
-            - '@sync_failure_strategy_collection'
-            - '@logger'
+            - '@log_and_throw_away'
+
+    synchronous_producer:
+        class: Disqontrol\Producer\SynchronousProducer
+        arguments:
+            - '@sync_dispatcher'
 
     # Failure strategies
     # Failure strategies with the tag "failure_strategy" will be automatically
