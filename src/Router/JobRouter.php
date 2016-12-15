@@ -2,7 +2,7 @@
 /*
 * This file is part of the Disqontrol package.
 *
-* (c) Webtrh s.r.o. <info@webtrh.cz>
+* (c) Mediaplus.cz s.r.o. <info@mediaplus.cz>
 *
 * For the full copyright and license information, please view the LICENSE
 * file that was distributed with this source code.
