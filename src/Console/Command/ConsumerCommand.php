@@ -89,7 +89,7 @@ class ConsumerCommand extends Command
     {
         $this
             ->setName(self::COMMAND_NAME)
-            ->setDescription('Start a job consumer');
+            ->setDescription('Start a job consumer [Internal command]');
 
         $defaultBatch = $this->config->getConsumerDefaults()[Config::JOB_BATCH];
         $this->addOption(

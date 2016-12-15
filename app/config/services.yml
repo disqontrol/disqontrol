@@ -84,13 +84,26 @@ services:
         class: Disqontrol\Dispatcher\Call\Factory\CliCallFactory
         arguments:
             - '@configuration'
-            - '@job_marshaller'
+            - '@job_serializer'
             - '@process_factory'
+
+    php_call_factory:
+        class: Disqontrol\Dispatcher\Call\Factory\PhpCallFactory
+        arguments:
+            - '@worker_factory_collection'
+
+    isolated_php_call_factory:
+        class: Disqontrol\Dispatcher\Call\Factory\IsolatedPhpCallFactory
+        arguments:
+            - '@cli_call_factory'
+            - "@=service('configuration').getBootstrapFilePath()"
 
     call_factory:
         class: Disqontrol\Dispatcher\Call\Factory\CallFactory
         arguments:
             - '@cli_call_factory'
+            - '@php_call_factory'
+            - '@isolated_php_call_factory'
 
     job_router_factory:
         class: Disqontrol\Router\JobRouterFactory
@@ -231,5 +244,23 @@ services:
         arguments:
             - '@scheduler'
             - '@logger'
+        tags:
+            - { name: disqontrol.command }
+
+    worker_factory_collection:
+        class: Disqontrol\Worker\WorkerFactoryCollectionInterface
+        factory: ['@disqontrol', getWorkerFactoryCollection]
+
+    php_worker_executor:
+        class: Disqontrol\Worker\PhpWorkerExecutor
+        arguments:
+            - '@job_serializer'
+            - '@php_call_factory'
+            - '@logger'
+
+    run_php_worker_command:
+        class: Disqontrol\Console\Command\WorkerCommand
+        arguments:
+            - '@php_worker_executor'
         tags:
             - { name: disqontrol.command }

@@ -13,7 +13,7 @@ namespace Disqontrol\Dispatcher\Call\Factory;
 use Disqontrol\Configuration\Configuration;
 use Disqontrol\Dispatcher\Call\Cli\CliCall;
 use Disqontrol\Dispatcher\Call\Cli\ProcessFactory;
-use Disqontrol\Job\Marshaller\MarshallerInterface;
+use Disqontrol\Job\Serializer\SerializerInterface;
 use Disqontrol\Router\WorkerDirectionsInterface;
 use Disqontrol\Job\JobInterface;
 
@@ -30,9 +30,9 @@ class CliCallFactory implements CallFactoryInterface
     private $config;
 
     /**
-     * @var MarshallerInterface
+     * @var SerializerInterface
      */
-    private $marshaller;
+    private $serializer;
 
     /**
      * @var ProcessFactory
@@ -41,16 +41,16 @@ class CliCallFactory implements CallFactoryInterface
 
     /**
      * @param Configuration       $config
-     * @param MarshallerInterface $marshaller
+     * @param SerializerInterface $serializer
      * @param ProcessFactory      $processFactory
      */
     public function __construct(
         Configuration $config,
-        MarshallerInterface $marshaller,
+        SerializerInterface $serializer,
         ProcessFactory $processFactory
     ) {
         $this->config = $config;
-        $this->marshaller = $marshaller;
+        $this->serializer = $serializer;
         $this->processFactory = $processFactory;
     }
 
@@ -67,7 +67,7 @@ class CliCallFactory implements CallFactoryInterface
         return new CliCall(
             $directions,
             $job,
-            $this->marshaller,
+            $this->serializer,
             $timeout,
             $this->processFactory
         );

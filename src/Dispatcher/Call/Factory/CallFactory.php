@@ -24,17 +24,23 @@ class CallFactory implements CallFactoryInterface
 {
     /**
      * @var CallFactoryInterface[] Factories for different types of calls
-     *                       indexed by the type ('cli', 'http', 'php'...)
+     *                       indexed by the type ('cli', 'http'...)
      */
     private $factories = [];
 
     /**
      * @param CallFactoryInterface $cliCallFactory
+     * @param CallFactoryInterface $phpCallFactory
+     * @param CallFactoryInterface $isolatedPhpCallFactory
      */
     public function __construct(
-        CallFactoryInterface $cliCallFactory
+        CallFactoryInterface $cliCallFactory,
+        CallFactoryInterface $phpCallFactory,
+        CallFactoryInterface $isolatedPhpCallFactory
     ) {
         $this->factories[WorkerType::CLI] = $cliCallFactory;
+        $this->factories[WorkerType::INLINE_PHP_WORKER] = $phpCallFactory;
+        $this->factories[WorkerType::ISOLATED_PHP_WORKER] = $isolatedPhpCallFactory;
     }
 
     /**

@@ -101,23 +101,23 @@ disqontrol:
                 # The key serves as the worker call type.
                 #
                 # Allowed worker call types are
-                # - cli     : A console command
-                # - http    : A HTTP request
-                # - php     : An inline PHP call
-                # - php_cli : A PHP worker wrapped in a console command
+                # - cli                : A console command
+                # - http               : A HTTP request
+                # - inline_php_worker  : An inline PHP call
+                # - isolated_php_worker: A PHP worker wrapped in a console command
                 #
                 # All workers but inline PHP workers allow asynchronous calls.
                 # (See the comment at 'job_batch' below.)
                 #
                 # The value is the location of the worker. In case of a console
                 # command, it is the command itself.
-                # Console commands are called with the arguments "--body" and
-                # "--metadata".
-                # "--body=" is followed by a JSON-serialized job body.
-                # "--metadata=" is followed by JSON-serialized job metadata
+                # Console commands are called with the arguments:
+                # "--queue" followed by the queue name
+                # "--body=" followed by a JSON-serialized job body.
+                # "--metadata=" followed by JSON-serialized job metadata
                 #
                 # The exact command for this worker would be:
-                # php console email:send --body=... --metadata=...
+                # php console email:send --queue='registration-email' --body=... --metadata=...
                 cli: 'php console email:send'
 
             # You can override the queue defaults defined above
@@ -169,10 +169,10 @@ disqontrol:
                 another_parameter: 'baz'
 
         'pic-resize':
-            # An example of a PHP inline worker called directly in the consumer.
+            # An example of an inline PHP worker called directly in the consumer.
             # It's actually the Consumer process that processes the jobs, so
             # beware of memory leaks.
-            # Create a WorkerBuilder for each PHP worker and register it during
+            # Create a WorkerFactory for each PHP worker and register it during
             # the Disqontrol bootstrap.
             worker:
                 inline_php_worker: 'PicResizeWorker'
