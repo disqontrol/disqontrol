@@ -1,4 +1,4 @@
 #!/usr/bin/env php
 <?php
-require_once 'src/DisqontrolApplication.php';
+require_once __DIR__ . '/../src/DisqontrolApplication.php';
 $disqontrolApplication = new Disqontrol\DisqontrolApplication($argv);

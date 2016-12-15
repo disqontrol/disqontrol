@@ -59,12 +59,12 @@ are a few more terms that will be explained where needed.
 Install Disqontrol via Composer:
 
 ``` bash
-$ composer require webtrh/disqontrol
+composer require webtrh/disqontrol
 ```
 
 ### Getting started
 
-Copy the file `disqontrol.yml.dist` to `disqontrol.yml`, open `disqontrol.yml`
+Copy the file `docs/examples/disqontrol.yml.dist` to `disqontrol.yml`, open `disqontrol.yml`
 and configure Disqontrol. You need to fill out these sections:
 
 - `disque` contains the information about the connection to Disque
@@ -77,7 +77,7 @@ will spawn consumers with the default parameters.
 Start Disqontrol:
 
 ``` bash
-$ disqontrol supervisor
+/path/to/disqontrol supervisor
 ```
 
 ``` php
@@ -122,7 +122,9 @@ Friday at 02:34 AM and the third job will run every 5 minutes.
 
 Run the scheduler every minute by adding this entry to your system crontab:
 
-`* * * * * /path/to/disqontrol scheduler --crontab=/path/to/crontab >/dev/null 2>&1`
+``` bash
+* * * * * /path/to/disqontrol scheduler --crontab=/path/to/crontab >/dev/null 2>&1
+```
 
 ### What happens with failed jobs?
 
@@ -267,13 +269,13 @@ return $disqontrol;
 
 Save this code in a file, let's call it the Disqontrol bootstrap file.
 
-NOTE: For a longer and commented example, see `examples/disqontrol_bootstrap.php`
+NOTE: For a longer and commented example, see `docs/examples/disqontrol_bootstrap.php`
 
 When running Disqontrol as a command line application, tell it what bootstrap
 file it should use by adding the argument "--bootstrap":
 
 ``` bash
-disqontrol supervisor --bootstrap=/file/to/disqontrol_bootstrap.php
+/path/to/disqontrol supervisor --bootstrap=/file/to/disqontrol_bootstrap.php
 ```
 
 If you name the bootstrap file `disqontrol_bootstrap.php` and place it
@@ -282,7 +284,7 @@ it will be used automatically, without the need to explicitly specify its path.
 With the bootstrap file in its default location, you can then call just this:
 
 ```bash
-disqontrol supervisor
+/path/to/disqontrol supervisor
 ```
 
 Disqontrol will look for `disqontrol_bootstrap.php` and use it automatically.

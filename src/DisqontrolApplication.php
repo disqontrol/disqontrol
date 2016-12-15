@@ -29,6 +29,12 @@ use RuntimeException;
  */
 class DisqontrolApplication
 {
+    /**
+     * A relative path to the Disqontrol executable
+     * The space at the end is there on purpose for easier command composition.
+     */
+    const COMMAND_LINE_EXECUTABLE = '/bin/disqontrol ';
+
     const BOOTSTRAP_ARGUMENT = 'bootstrap';
     const DEFAULT_BOOTSTRAP_PATH = 'disqontrol_bootstrap.php';
     const VERBOSITY_DEBUG = 3;
@@ -74,6 +80,26 @@ class DisqontrolApplication
             file_put_contents('php://stderr', $e->getMessage() . "\n");
             die(1);
         }
+    }
+
+    /**
+     * Get the Disqontrol root directory
+     *
+     * @return string
+     */
+    public static function getRootDir()
+    {
+        return realpath(__DIR__ . '/..');
+    }
+
+    /**
+     * Get the Disqontrol command line executable
+     *
+     * @return string
+     */
+    public static function getExecutable()
+    {
+        return self::getRootDir() . self::COMMAND_LINE_EXECUTABLE;
     }
 
     /**

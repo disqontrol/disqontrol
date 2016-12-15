@@ -13,7 +13,7 @@ namespace Disqontrol\Consumer\Process;
 use Disqontrol\Console\Command\ConsumerCommand;
 use Psr\Log\LoggerInterface;
 use Disqontrol\Logger\MessageFormatter as Msg;
-use Disqontrol\DisqontrolApplication;
+use Disqontrol\DisqontrolApplication as App;
 
 /**
  * Spawn a new consumer process
@@ -27,10 +27,10 @@ class ConsumerProcessSpawner
      *
      * disqontrol consumer --batch=2 [--burst] foo-queue --bootstrap=foo.php
      */
-    const CONSUMER_CMD = './disqontrol ' . ConsumerCommand::COMMAND_NAME .
+    const CONSUMER_CMD = ConsumerCommand::COMMAND_NAME .
         ' --' . ConsumerCommand::OPTION_BATCH . '=%1$d %2$s %3$s';
 
-    const BOOTSTRAP_ARGUMENT = ' --' . DisqontrolApplication::BOOTSTRAP_ARGUMENT . '=%4$s';
+    const BOOTSTRAP_ARGUMENT = ' --' . App::BOOTSTRAP_ARGUMENT . '=%4$s';
     
     /**
      * @var LoggerInterface
@@ -76,7 +76,7 @@ class ConsumerProcessSpawner
 
         $queues = implode(' ', $queues);
 
-        $cmdPattern = self::CONSUMER_CMD;
+        $cmdPattern = App::getExecutable() . self::CONSUMER_CMD;
         if( ! empty($this->bootstrapFilePath)) {
             $cmdPattern .= self::BOOTSTRAP_ARGUMENT;
         }

@@ -10,6 +10,7 @@
 
 namespace Disqontrol\Test\Integration;
 
+use Disqontrol\DisqontrolApplication as App;
 use Disqontrol\Configuration\ConfigDefinition as Config;
 use Disqontrol\Dispatcher\Call\Cli\NullProcess;
 use Disqontrol\Disqontrol;
@@ -475,7 +476,7 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
             new ParameterBag([Disqontrol::CONTAINER_CONFIG_KEY => $configParams])
         );
 
-        $configDir = realpath(__DIR__ . '/..' . Disqontrol::APP_CONFIG_DIR_PATH);
+        $configDir = App::getRootDir() . Disqontrol::APP_CONFIG_DIR_PATH;
         $loader = new YamlFileLoader($container, new FileLocator($configDir));
         $loader->load(Disqontrol::SERVICES_FILE);
 
