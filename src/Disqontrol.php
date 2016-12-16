@@ -69,7 +69,6 @@ class Disqontrol
     /**
      * Keys for the service container parameters
      */
-    const CONTAINER_CONFIG_KEY = 'configuration';
     const CONTAINER_COMMANDS_KEY = 'disqontrol.commands';
 
     /**
@@ -206,6 +205,8 @@ class Disqontrol
         require_once $cache->getPath();
         $this->container = new $containerClass();
         $this->container->set('disqontrol', $this);
+        $configFactory = $this->container->get('configuration_factory');
+        $configFactory->setConfigArray($this->configParams);
     }
 
     /**
@@ -227,7 +228,7 @@ class Disqontrol
             }
         }
 
-        $container = $this->getContainerBuilder();
+        $container = new ContainerBuilder();
         $container->addObjectResource($this);
         $container->addResource(new FileResource($this->configFile));
 
@@ -263,18 +264,6 @@ class Disqontrol
         $dumper = new PhpDumper($container);
         $content = $dumper->dump(array('class' => $class, 'file' => $cache->getPath()));
         $cache->write($content, $container->getResources());
-    }
-
-    /**
-     * Get the container builder
-     *
-     * @return ContainerBuilder
-     */
-    private function getContainerBuilder()
-    {
-        return new ContainerBuilder(
-            new ParameterBag([self::CONTAINER_CONFIG_KEY => $this->configParams])
-        );
     }
 
     /**

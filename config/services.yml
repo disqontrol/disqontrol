@@ -1,8 +1,12 @@
 services:
+    configuration_factory:
+        class: Disqontrol\Configuration\ConfigurationFactory
+
     configuration:
         class: Disqontrol\Configuration\Configuration
-        arguments:
-            - %configuration%
+        factory:
+            - '@configuration_factory'
+            - 'create'
 
     event_dispatcher:
         class: Symfony\Component\EventDispatcher\ContainerAwareEventDispatcher

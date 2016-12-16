@@ -468,13 +468,7 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
         $processFactory = null,
         $logger = null
     ) {
-        if (empty($configParams)) {
-            $configParams = $this->loadConfiguration();
-        }
-
-        $container = new ContainerBuilder(
-            new ParameterBag([Disqontrol::CONTAINER_CONFIG_KEY => $configParams])
-        );
+        $container = new ContainerBuilder();
 
         $configDir = App::getRootDir() . Disqontrol::APP_CONFIG_DIR_PATH;
         $loader = new YamlFileLoader($container, new FileLocator($configDir));
@@ -490,6 +484,12 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
                 Disqontrol::EVENT_SUBSCRIBER_TAG
             )
         );
+
+        if (empty($configParams)) {
+            $configParams = $this->loadConfiguration();
+        }
+        $configFactory = $container->get('configuration_factory');
+        $configFactory->setConfigArray($configParams);
 
         // Set mocked services
         if (empty($disque)) {
