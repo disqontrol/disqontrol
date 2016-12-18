@@ -94,7 +94,7 @@ class JobRouterFactory
         $queueConfig = $this->config->getQueuesConfig();
 
         foreach ($queueConfig as $queueName => $queue) {
-            $directions = $this->createDirections($queue);
+            $directions = $this->createDirections($queueName);
             $route = new SimpleRoute([$queueName], $directions);
             $this->jobRouter->addRoute($route);
         }
@@ -103,18 +103,19 @@ class JobRouterFactory
     /**
      * Create WorkerDirections from a queue config array
      *
-     * @param array $queueConfig
+     * @param string $queue
      *
      * @return WorkerDirectionsInterface
      *
      * @throws InvalidArgumentException
      */
-    private function createDirections(array $queueConfig)
+    private function createDirections($queue)
     {
-        list($workerTypeName, $address) = each($queueConfig[Config::WORKER]);
+        $workerTypeName = $this->config->getWorkerType($queue);
+        $address = $this->config->getWorkerDirections($queue);
 
-        $parameters = $queueConfig[Config::WORKER];
-        unset($parameters[$workerTypeName]);
+        // Parameters are meant for HTTP workers and are not implemented yet
+        $parameters = array();
 
         $workerType = $this->stringToWorkerType($workerTypeName);
         $directions = new WorkerDirections($workerType, $address, $parameters);
@@ -125,7 +126,7 @@ class JobRouterFactory
     /**
      * Convert the worker type from a string to an object
      *
-     * @param string $type Worker type string, eg. 'cli', 'php'
+     * @param string $type Worker type string, eg. 'command', 'http'
      *
      * @return WorkerType
      *

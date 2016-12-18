@@ -98,7 +98,7 @@ disqontrol:
 
             # An example of a command-line worker called via a console command
             worker:
-                # The key serves as the worker call type.
+                # The "type" determines the worker type.
                 #
                 # Allowed worker call types are
                 # - command            : A console command
@@ -109,8 +109,20 @@ disqontrol:
                 # All workers but inline PHP workers allow asynchronous calls.
                 # (See the comment at 'job_batch' below.)
                 #
-                # The value is the location of the worker. In case of a console
-                # command, it is the command itself.
+                # The other required parameter is the worker target:
+                # Its address/command/name.
+                #
+                # You can use any of these three keys to define the worker target:
+                # - address:
+                # - command:
+                # - name:
+                #
+                # In case of a console command, it is the command itself.
+                type: command
+
+                # The target for this worker - its command:
+                command: 'php console email:send'
+                
                 # Console commands are called with the arguments:
                 # "--queue" followed by the queue name
                 # "--body=" followed by a JSON-serialized job body.
@@ -118,7 +130,6 @@ disqontrol:
                 #
                 # The exact command for this worker would be:
                 # php console email:send --queue='registration-email' --body=... --metadata=...
-                command: 'php console email:send'
 
             # You can override the queue defaults defined above
             job_process_timeout: 10
@@ -150,23 +161,23 @@ disqontrol:
             # regarding the URL length.
             worker:
 
-                # The worker type and address - the only required line - must
-                # be the first line in the worker definition.
-                http: 'https://example.com/worker?key={api_key}'
+                # The worker type and address
+                type: http
+                address: 'https://example.com/worker?key={api_key}'
 
-                # The request method of the worker HTTP call.
+                # TODO: The request method of the worker HTTP call.
                 #
                 # Allowed values: post, get
                 # Default value: 'post'
-                method: 'post'
+                #method: 'post'
 
                 # Optional headers
-                headers:
-                    'Content-Type': 'application/json'
+                #headers:
+                #    'Content-Type': 'application/json'
 
                 # More optional parameters. The key is up to you
-                api_key: 'foobar123'
-                another_parameter: 'baz'
+                #api_key: 'foobar123'
+                #another_parameter: 'baz'
 
         'pic-resize':
             # An example of an inline PHP worker called directly in the consumer.
@@ -175,7 +186,8 @@ disqontrol:
             # Create a WorkerFactory for each PHP worker and register it during
             # the Disqontrol bootstrap.
             worker:
-                inline_php_worker: 'PicResizeWorker'
+                type: inline_php_worker
+                name: 'PicResizeWorker'
 
         'rss-update':
             # An example of a PHP worker wrapped in a console command
@@ -187,7 +199,8 @@ disqontrol:
             # Create a WorkerFactory for each isolated PHP worker and register
             # them during the Disqontrol bootstrap.
             worker:
-                isolated_php_worker: 'RssUpdateWorker'
+                type: isolated_php_worker
+                name: 'RssUpdateWorker'
 
     # Default settings for all consumers
     consumer_defaults:

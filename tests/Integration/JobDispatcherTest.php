@@ -93,10 +93,10 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
     {
         $configParams = $this->loadConfiguration();
         // Remove the line with the correct worker type
-        unset($configParams[Config::QUEUES][self::JOB_QUEUE][Config::WORKER]);
+        unset($configParams[Config::QUEUES][self::JOB_QUEUE][Config::WORKER][Config::WORKER_TYPE]);
         // ... and replace it with an unsupported worker type
         $configParams[Config::QUEUES][self::JOB_QUEUE][Config::WORKER]
-            [UnsupportedWorkerType::UNSUPPORTED] = self::WORKER_ADDRESS;
+            [Config::WORKER_TYPE] = UnsupportedWorkerType::UNSUPPORTED;
 
         $container = $this->createContainer($configParams);
 
@@ -117,7 +117,8 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
         $configParams = $this->loadConfiguration();
         // Add parameters to the worker
         $configParams[Config::QUEUES][self::JOB_QUEUE][Config::WORKER] = [
-            WorkerType::HTTP => self::WORKER_ADDRESS,
+            Config::WORKER_TYPE => WorkerType::HTTP,
+            Config::HTTP_WORKER_ADDRESS => self::WORKER_ADDRESS,
             self::PARAMETER_NAME => self::PARAMETER_VALUE
         ];
 
