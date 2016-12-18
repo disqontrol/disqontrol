@@ -70,7 +70,7 @@ class CliCall extends AbstractCall implements CallInterface
         $this->workerDirections = $directions;
         $this->job = $job;
 
-        if ($directions->getType() !== WorkerType::CLI()) {
+        if ($directions->getType() !== WorkerType::COMMAND()) {
             $errorMessage = sprintf(
                 'A CliCall cannot use directions for a %s worker.',
                 $directions->getType()->getConstName()

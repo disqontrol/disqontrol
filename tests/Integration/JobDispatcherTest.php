@@ -190,7 +190,7 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
         $container = $this->createContainer([], $disque, $processFactory);
 
         $listener = function (JobRouteEvent $event) {
-            $directions = new WorkerDirections(WorkerType::CLI(), self::WORKER_ADDRESS);
+            $directions = new WorkerDirections(WorkerType::COMMAND(), self::WORKER_ADDRESS);
             $event->setWorkerDirections($directions);
             $event->stopPropagation();
         };
