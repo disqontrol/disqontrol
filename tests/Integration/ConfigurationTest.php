@@ -19,7 +19,7 @@ use Symfony\Component\Yaml\Yaml;
  */
 class ConfigurationTest extends \PHPUnit_Framework_TestCase
 {
-    const CONFIG_FILE = 'disqontrol.yml.dist';
+    const CONFIG_FILE = 'docs/examples/disqontrol.yml.dist';
     const TEST_LOG_PATH = 'foo/bar';
     const TEST_JOB_LIFETIME = 321;
     const UNDEFINED_QUEUE = 'fooqueuebar123';

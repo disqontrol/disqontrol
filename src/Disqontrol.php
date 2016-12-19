@@ -10,6 +10,7 @@
 
 namespace Disqontrol;
 
+use Disqontrol\DisqontrolApplication as App;
 use Disqontrol\Configuration\ConfigDefinition;
 use Disqontrol\Configuration\ConsoleCommandsCompilerPass;
 use Disqontrol\Configuration\FailureStrategiesCompilerPass;
@@ -63,7 +64,7 @@ class Disqontrol
     const DEFAULT_CONFIG_PATH = 'disqontrol.yml';
     const CONTAINER_CACHE_FILE = 'disqontrol.container.php';
     const SERVICES_FILE = 'services.yml';
-    const APP_CONFIG_DIR_PATH = '/../app/config';
+    const APP_CONFIG_DIR_PATH = '/config';
 
     /**
      * Keys for the service container parameters
@@ -353,7 +354,7 @@ class Disqontrol
      */
     private function getConfigDir()
     {
-        return realpath(__DIR__ . self::APP_CONFIG_DIR_PATH);
+        return App::getRootDir() . self::APP_CONFIG_DIR_PATH;
     }
 
     /**

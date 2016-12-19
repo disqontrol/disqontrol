@@ -17,7 +17,7 @@ use Disqontrol\Router\WorkerDirections;
 use Disqontrol\Router\WorkerDirectionsInterface;
 use Disqontrol\Job\JobInterface;
 use Disqontrol\Worker\WorkerType;
-use Disqontrol\DisqontrolApplication;
+use Disqontrol\DisqontrolApplication as App;
 
 /**
  * Create a CLI call to the isolated PHP worker
@@ -31,9 +31,9 @@ class IsolatedPhpCallFactory implements CallFactoryInterface
      * The arguments --queue=bar-queue --body=foo --metadata=baz
      * are added in CliCall
      */
-    const COMMAND = './disqontrol ' . WorkerCommand::NAME . ' %1$s';
+    const COMMAND = WorkerCommand::NAME . ' %1$s';
 
-    const BOOTSTRAP_ARGUMENT = ' --' . DisqontrolApplication::BOOTSTRAP_ARGUMENT . '=%2$s';
+    const BOOTSTRAP_ARGUMENT = ' --' . App::BOOTSTRAP_ARGUMENT . '=%2$s';
 
     /**
      * @var CallFactoryInterface
@@ -64,7 +64,7 @@ class IsolatedPhpCallFactory implements CallFactoryInterface
         WorkerDirectionsInterface $directions,
         JobInterface $job
     ) {
-        $cmdPattern = self::COMMAND;
+        $cmdPattern = App::getExecutable() . self::COMMAND;
 
         if( ! empty($this->bootstrapFilePath)) {
             $cmdPattern .= self::BOOTSTRAP_ARGUMENT;
