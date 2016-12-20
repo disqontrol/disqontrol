@@ -80,11 +80,22 @@ Start Disqontrol:
 /path/to/disqontrol supervisor
 ```
 
-If in a PHP application, create a Disqontrol instance:
+#### Using Disqontrol in your PHP application
+
+In your application, all Disqontrol functions are accessible from an instance of
+`Disqontrol\Disqontrol` that you need to create. It can be as simple as
 
 ``` php
-$disqontrol = new Disqontrol\Disqontrol('/path/to/configuration');
+$pathToConfig = '/path/to/config';
+$disqontrol = new Disqontrol\Disqontrol($pathToConfig);
 ```
+
+If you use PHP workers, the setup is a bit more involved. See the documentation
+section "Using PHP Workers".
+
+See also examples at
+docs/examples/app_bootstrap.php
+docs/examples/DisqontrolFactory.php
 
 ### Adding jobs to Disque
 
@@ -193,6 +204,8 @@ An example crontab with regular jobs may look like this:
 The first job will run every day at 05:15 AM, the second job will run every
 Friday at 02:34 AM and the third job will run every 5 minutes.
 
+See also docs/examples/crontab
+
 Run the scheduler every minute by adding this entry to your system crontab:
 
 ``` bash
@@ -283,10 +296,11 @@ public method create($workerEnvironment);
 
 Your worker factories live outside of your code, but before they are asked
 to return a worker, they will receive your environment. What they receive is
-exactly what we returned in the anonymous function above (in our example it
+exactly what you returned from the anonymous function above (in our example it
 would be the variable `$serviceContainer`).
 
-Why is the environment setup code separate and why is this so complicated?
+Why is the environment setup code separate?
+
 The reason for this is that Disqontrol starts a few long running processes.
 In order for them to be as small as possible and in order to minimize memory
 leaks, we don't want to start up the whole application environment
@@ -303,7 +317,7 @@ worker factory.
 
 #### Registering PHP workers and the environment setup code in Disqontrol
 
-If you want to use PHP workers - whether run inline directly in Consumer, 
+If you want to use PHP workers - whether called inline directly in Consumer,
 or in a separate process - you need to connect your PHP application
 and Disqontrol.
 
@@ -363,6 +377,8 @@ With the bootstrap file in its default location, you can then call just this:
 Disqontrol will look for `disqontrol_bootstrap.php` and use it automatically.
 
 ### Extending the functionality via Events
+
+TODO.
 
 
 ## Purpose

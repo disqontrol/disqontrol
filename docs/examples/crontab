@@ -1,0 +1,12 @@
+# An example Disqontrol crontab
+# Pattern: minute hour day month weekday queue job-body
+
+# Examples:
+# Every hour at x:15 minutes
+15 * * * * profile-update all
+
+# Every day at 04:30
+30 4 * * * rss-update 1
+
+# Every Saturday at 03:25
+25 3 * * 6 pic-resize true
