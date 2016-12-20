@@ -38,7 +38,7 @@ class CallFactory implements CallFactoryInterface
         CallFactoryInterface $phpCallFactory,
         CallFactoryInterface $isolatedPhpCallFactory
     ) {
-        $this->factories[WorkerType::CLI] = $cliCallFactory;
+        $this->factories[WorkerType::COMMAND] = $cliCallFactory;
         $this->factories[WorkerType::INLINE_PHP_WORKER] = $phpCallFactory;
         $this->factories[WorkerType::ISOLATED_PHP_WORKER] = $isolatedPhpCallFactory;
     }

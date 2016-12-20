@@ -142,6 +142,59 @@ class Configuration
     }
 
     /**
+     * Get the worker configuration for a queue
+     *
+     * @param string $queue
+     *
+     * @return array Worker configuration
+     */
+    public function getWorker($queue)
+    {
+        return $this->config[Config::QUEUES][$queue][Config::WORKER];
+    }
+
+    /**
+     * Get the type of the worker of a queue
+     *
+     * @param string $queue
+     *
+     * @return string The queue's worker type
+     */
+    public function getWorkerType($queue)
+    {
+        return $this->getWorker($queue)[Config::WORKER_TYPE];
+    }
+
+    /**
+     * Get the directions for the worker of a queue
+     *
+     * This means either of these parameters:
+     * command
+     * address
+     * name
+     *
+     * @param string $queue
+     *
+     * @return string Directions
+     */
+    public function getWorkerDirections($queue)
+    {
+        $worker = $this->getWorker($queue);
+
+        $possibleKeys = [
+            Config::COMMAND_WORKER_COMMAND,
+            Config::HTTP_WORKER_ADDRESS,
+            Config::PHP_WORKER_NAME,
+        ];
+
+        foreach ($possibleKeys as $possibleKey) {
+            if ( ! empty($worker[$possibleKey])) {
+                return $worker[$possibleKey];
+            }
+        }
+    }
+
+    /**
      * Get the maximum number a failed job in the given queue can be retried
      *
      * @param string $queue

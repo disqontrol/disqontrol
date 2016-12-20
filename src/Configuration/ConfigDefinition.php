@@ -21,6 +21,7 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
  * configuration file.
  *
  * @author Martin Patera <mzstic@gmail.com>
+ * @author Martin Schlemmer
  */
 class ConfigDefinition implements ConfigurationInterface
 {
@@ -52,6 +53,10 @@ class ConfigDefinition implements ConfigurationInterface
     const CONSUMERS = 'consumers';
 
     const WORKER = 'worker';
+    const WORKER_TYPE = 'type';
+    const COMMAND_WORKER_COMMAND = 'command';
+    const HTTP_WORKER_ADDRESS = 'address';
+    const PHP_WORKER_NAME = 'name';
 
     /** Default values */
     const LOG_DIR_DEFAULT = 'var/log';
@@ -277,8 +282,15 @@ class ConfigDefinition implements ConfigurationInterface
         $node = $builder->root(self::WORKER);
 
         $node
-            ->prototype('variable')
-            ->end();
+            ->children()
+                ->scalarNode(self::WORKER_TYPE)
+                    ->isRequired()
+                    ->end()
+                ->scalarNode(self::COMMAND_WORKER_COMMAND)->end()
+                ->scalarNode(self::HTTP_WORKER_ADDRESS)->end()
+                ->scalarNode(self::PHP_WORKER_NAME)->end()
+            ->end()
+        ->end();
 
         return $node;
     }

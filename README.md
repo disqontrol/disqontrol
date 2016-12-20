@@ -135,7 +135,7 @@ PHP workers are workers (code that processes jobs) written in PHP and called
 directly via Disqontrol.
 
 You can of course write workers in any language (including PHP) and call them
-via the command line (or HTTP), but we call these "CLI/HTTP workers" - they are
+via the command line (or HTTP), but we call these "Command-Line/HTTP workers" - they are
 completely independent of Disqontrol.
 
 But because Disqontrol is written in PHP, it offers a few helper features

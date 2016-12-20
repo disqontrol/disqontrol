@@ -34,14 +34,14 @@ use InvalidArgumentException;
  * 
  * @author Martin Schlemmer
  *
- * @method static WorkerType CLI()
+ * @method static WorkerType COMMAND()
  * @method static WorkerType HTTP()
  * @method static WorkerType INLINE_PHP_WORKER()
  * @method static WorkerType ISOLATED_PHP_WORKER()
  */
 class WorkerType extends Enum
 {
-    const CLI = 'cli';
+    const COMMAND = 'command';
     const HTTP = 'http';
     const INLINE_PHP_WORKER = 'inline_php_worker';
     const ISOLATED_PHP_WORKER = 'isolated_php_worker';

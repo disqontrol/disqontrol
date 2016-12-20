@@ -77,7 +77,7 @@ class IsolatedPhpCallFactory implements CallFactoryInterface
             $this->bootstrapFilePath
         );
 
-        $newDirections = new WorkerDirections(WorkerType::CLI(), $command);
+        $newDirections = new WorkerDirections(WorkerType::COMMAND(), $command);
         $call = $this->cliCallFactory->createCall($newDirections, $job);
 
         return $call;
