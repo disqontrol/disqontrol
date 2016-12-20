@@ -265,3 +265,19 @@ services:
             - '@php_worker_executor'
         tags:
             - { name: disqontrol.command }
+
+    addjob_command:
+        class: Disqontrol\Console\Command\AddJobCommand
+        arguments:
+            - '@producer'
+            - '@job_serializer'
+        tags:
+            - { name: disqontrol.command }
+
+    processjob_command:
+        class: Disqontrol\Console\Command\ProcessJobCommand
+        arguments:
+            - '@synchronous_producer'
+            - '@job_serializer'
+        tags:
+            - { name: disqontrol.command }

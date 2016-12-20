@@ -80,15 +80,45 @@ Start Disqontrol:
 /path/to/disqontrol supervisor
 ```
 
+If in a PHP application, create a Disqontrol instance:
+
 ``` php
-$disqontrol = new Disqontrol\Disqontrol();
+$disqontrol = new Disqontrol\Disqontrol('/path/to/configuration');
 ```
 
 ### Adding jobs to Disque
 
 #### From a PHP application
 
+Create a new job and send it to the job producer.
+
+``` php
+$job = new Disqontrol\Job\Job('queue', 'job-body');
+
+$producer = $disqontrol->getProducer();
+$producer->add($job);
+```
+
+If you don't want the job to be processed as soon as possible, you can delay it.
+
+``` php
+$delay = 3600; // in seconds, so this job will be enqueued in one hour
+$producer->add($job, $delay);
+```
+
 #### From a non-PHP application
+
+You can add jobs via a console command.
+
+``` bash
+disqontrol addjob queue '"JSON-serialized job body"'
+```
+
+If you don't want the job to be processed as soon as possible, you can delay it.
+
+``` bash
+disqontrol addjob queue '"JSON-serialized job body"' --delay=360
+```
 
 ### Debugging jobs in a synchronous mode
 
@@ -102,7 +132,6 @@ $disqontrol->getProducer()->add($job);
 ```
 
 call
-
 ``` php
 $synchronousMode = true;
 $disqontrol->getProducer($synchronousMode)->add($job);
@@ -117,6 +146,20 @@ producer returns the result of the processing of the job:
 ``` php
 $result = $synchronousProducer->add($job);
 ```
+
+If you're adding jobs via a console command, instead of
+
+``` bash
+disqontrol addjob
+```
+
+use the mirror command
+
+``` bash
+disqontrol processjob
+```
+
+It takes the same arguments as `addjob`, a queue and a JSON-serialized job body.
 
 ### Regular, repeated jobs
 
@@ -255,7 +298,6 @@ The environment setup code is registered with Disqontrol, but it is only
 called when it is needed (and only once). Its result is then injected into each
 worker factory.
 
-
 #### Registering PHP workers and the environment setup code in Disqontrol
 
 If you want to use PHP workers - whether run inline directly in Consumer, 
@@ -320,11 +362,9 @@ Disqontrol will look for `disqontrol_bootstrap.php` and use it automatically.
 ### Extending the functionality via Events
 
 
-
-
 ## Purpose
 
-### Why?
+### Why Disqontrol?
 
 When deciding to use a job queue, there are many small and large decisions 
 to make. For example
