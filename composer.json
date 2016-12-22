@@ -1,6 +1,6 @@
 {
-    "name": "webtrh/disqontrol",
-    "description": "PHP library with full service needed for running job queues in Disque",
+    "name": "disqontrol/disqontrol",
+    "description": "A user-friendly framework for running background jobs in any language.",
     "keywords": [
         "disque",
         "job",
@@ -14,11 +14,7 @@
         {
             "name": "Martin Schlemmer",
             "email": "lenz@centrum.cz",
-            "homepage": "https://webtrh.cz/"
-        },
-        {
-          "name": "Martin Patera",
-          "email": "mzstic@gmail.com"
+            "homepage": "https://disqontrol.com/"
         }
     ],
     "require": {
@@ -61,5 +57,5 @@
             "dev-master": "1.0-dev"
         }
     },
-    "bin": ["disqontrol"]
+    "bin": ["bin/disqontrol"]
 }

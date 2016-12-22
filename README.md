@@ -33,20 +33,20 @@ Disqontrol follows semantic versioning.
 We have thought about the terminology and tried to make it as clear as possible.
 We have taken into account how others, especially Disque, use the words.
 
-`Job` is anything you need to identify the work you need to do. It can be
+- `Job` is anything you need to identify the work you need to do. It can be
 a simple integer ID or a whole array of data.
-`Queue` is a channel on which `Jobs` of a particular type are published. E.g.
+- `Queue` is a channel on which `Jobs` of a particular type are published. E.g.
 'email-registration' or 'avatar-resize'. It can also mean the whole Disque.
-`Producer` is a class or a command you use in your application to add jobs
+- `Producer` is a class or a command you use in your application to add jobs
 to the queue for later processing.
-`Consumer` is a long-running process that listens to one or more queues,
+- `Consumer` is a long-running process that listens to one or more queues,
 fetches jobs from them, calls workers and decides what to do with failed jobs.
-`Worker` is the code that receives the job and does the actual work.
+- `Worker` is the code that receives the job and does the actual work.
 A worker can be PHP code called directly by the `Consumer`, a console command
 or a service listening for HTTP calls (e.g. a REST API).
-`Supervisor` is the top level command that ties it all together. It loads
+- `Supervisor` is the top level command that ties it all together. It loads
 the configuration and starts all `Consumers` as needed.
-`Scheduler` is a command that takes care of scheduled tasks. It should run
+- `Scheduler` is a command that takes care of scheduled tasks. It should run
 every minute via cron.
 
 These are the basic terms you need to use Disqontrol. Inside Disqontrol there
@@ -59,7 +59,7 @@ are a few more terms that will be explained where needed.
 Install Disqontrol via Composer:
 
 ``` bash
-composer require webtrh/disqontrol
+composer require disqontrol/disqontrol
 ```
 
 ### Getting started
@@ -173,7 +173,9 @@ and deploy the changes simply by deploying your code.
 
 A Disqontrol crontab row has the following syntax:
 
-`* * * * * queue job-body`
+```
+* * * * * queue job-body
+```
 
 Where
 - the asterisks follow the common cron syntax (minute, hour, day, month, weekday),
@@ -199,6 +201,7 @@ Run the scheduler every minute by adding this entry to your system crontab:
 
 ### What happens with failed jobs?
 
+TODO
 
 ### Using PHP workers
 
@@ -272,7 +275,7 @@ $environmentSetup = function() {
 ```
 
 The WorkerFactoryInterface that all worker factories must implement has
-a peculiar method signature:
+a special method signature:
 
 ``` php
 public method create($workerEnvironment);
@@ -416,12 +419,12 @@ For libraries in other languages, have a look at
 
 ## Change log
 
-Please see [CHANGELOG](CHANGELOG.md) for more information what has changed recently.
+Please see the [CHANGELOG](CHANGELOG.md) for more information what has changed recently.
 
 ## Testing
 
 ``` bash
-$ composer test
+vendor/bin/phpunit
 ```
 
 ## Contributing
@@ -430,7 +433,7 @@ Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
 
 ## Security
 
-If you discover any security related issues, please email info@webtrh.cz instead of using the issue tracker.
+If you discover any security related issues, please email info@mediaplus.cz instead of using the issue tracker.
 
 ## Graceful handover
 
@@ -462,26 +465,26 @@ pull requests.
 
 ## Credits
 
-- [:author_name][link-author]
 - [All Contributors][link-contributors]
-
-Big thanks to Antirez for Disque and Mariano for Disque-php
+- Big thanks to Antirez for [Disque](https://github.com/antirez/disque)
+- Big thanks to Mariano for [Disque-php](https://github.com/mariano/disque-php)
+- Thanks to Martin Patera for kicking off the work
 
 ## License
 
-The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+The MIT License (MIT). Please see the [License](LICENSE.md) for more information.
 
-[ico-version]: https://img.shields.io/packagist/v/webtrh/disqontrol.svg?style=flat-square
+[ico-version]: https://img.shields.io/packagist/v/disqontrol/disqontrol.svg?style=flat-square
 [ico-license]: https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square
-[ico-travis]: https://img.shields.io/travis/webtrh/disqontrol/master.svg?style=flat-square
-[ico-scrutinizer]: https://img.shields.io/scrutinizer/coverage/g/thephpwebtrh/disqontrol.svg?style=flat-square
-[ico-code-quality]: https://img.shields.io/scrutinizer/g/thephpwebtrh/disqontrol.svg?style=flat-square
-[ico-downloads]: https://img.shields.io/packagist/dt/webtrh/disqontrol.svg?style=flat-square
+[ico-travis]: https://img.shields.io/travis/disqontrol/disqontrol/master.svg?style=flat-square
+[ico-scrutinizer]: https://img.shields.io/scrutinizer/coverage/g/disqontrol/disqontrol.svg?style=flat-square
+[ico-code-quality]: https://img.shields.io/scrutinizer/g/disqontrol/disqontrol.svg?style=flat-square
+[ico-downloads]: https://img.shields.io/packagist/dt/disqontrol/disqontrol.svg?style=flat-square
 
-[link-packagist]: https://packagist.org/packages/webtrh/disqontrol
-[link-travis]: https://travis-ci.org/thephpwebtrh/disqontrol
-[link-scrutinizer]: https://scrutinizer-ci.com/g/thephpwebtrh/disqontrol/code-structure
-[link-code-quality]: https://scrutinizer-ci.com/g/thephpwebtrh/disqontrol
-[link-downloads]: https://packagist.org/packages/webtrh/disqontrol
-[link-author]: https://github.com/webtrh
+[link-packagist]: https://packagist.org/packages/disqontrol/disqontrol
+[link-travis]: https://travis-ci.org/disqontrol/disqontrol
+[link-scrutinizer]: https://scrutinizer-ci.com/g/disqontrol/disqontrol/code-structure
+[link-code-quality]: https://scrutinizer-ci.com/g/disqontrol/disqontrol
+[link-downloads]: https://packagist.org/packages/disqontrol/disqontrol
+[link-author]: https://github.com/disqontrol
 [link-contributors]: ../../contributors
