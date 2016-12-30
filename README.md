@@ -291,7 +291,7 @@ The WorkerFactoryInterface that all worker factories must implement has
 a special method signature:
 
 ``` php
-public method create($workerEnvironment);
+public method create($workerEnvironment, $workerName);
 ```
 
 Your worker factories live outside of your code, but before they are asked

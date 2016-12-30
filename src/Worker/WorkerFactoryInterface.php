@@ -41,9 +41,10 @@ interface WorkerFactoryInterface
      *
      * @see WorkerFactoryCollectionInterface::registerWorkerEnvironmentSetup()
      * 
-     * @param mixed $workerEnvironment
+     * @param mixed  $workerEnvironment
+     * @param string $workerName
      *
      * @return WorkerInterface
      */
-    public function create($workerEnvironment);
+    public function create($workerEnvironment, $workerName);
 }

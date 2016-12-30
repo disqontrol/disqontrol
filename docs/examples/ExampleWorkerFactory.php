@@ -20,9 +20,9 @@ class ExampleWorkerFactory implements WorkerFactoryInterface
     /**
      * {@inheritdoc}
      */
-    public function create($container)
+    public function create($container, $workerName)
     {
-        // return $container->get('foo_worker');
+        // return $container->get($workerName);
         return new ExampleWorker();
     }
 }
