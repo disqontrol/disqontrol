@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2016-12-30
 ### Changed
 - WorkerFactoryInterface::create() receives a second argument, the worker name
 
