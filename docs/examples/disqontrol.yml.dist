@@ -187,7 +187,7 @@ disqontrol:
             # the Disqontrol bootstrap.
             worker:
                 type: inline_php_worker
-                name: 'PicResizeWorker'
+                name: 'pic_resize_worker'
 
         'rss-update':
             # An example of a PHP worker wrapped in a console command
@@ -200,7 +200,7 @@ disqontrol:
             # them during the Disqontrol bootstrap.
             worker:
                 type: isolated_php_worker
-                name: 'RssUpdateWorker'
+                name: 'rss_update_worker'
 
     # Default settings for all consumers
     consumer_defaults:

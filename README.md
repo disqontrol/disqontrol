@@ -36,16 +36,16 @@ We have taken into account how others, especially Disque, use the words.
 - `Job` is anything you need to identify the work you need to do. It can be
 a simple integer ID or a whole array of data.
 - `Queue` is a channel on which `Jobs` of a particular type are published. E.g.
-'email-registration' or 'avatar-resize'. It can also mean the whole Disque.
+'email-registration' or 'avatar-resize'.
 - `Producer` is a class or a command you use in your application to add jobs
-to the queue for later processing.
+to the queue for background processing.
 - `Consumer` is a long-running process that listens to one or more queues,
 fetches jobs from them, calls workers and decides what to do with failed jobs.
 - `Worker` is the code that receives the job and does the actual work.
-A worker can be PHP code called directly by the `Consumer`, a console command
-or a service listening for HTTP calls (e.g. a REST API).
+A worker can be PHP code, a console command or a service listening for HTTP
+calls (e.g. a REST API).
 - `Supervisor` is the top level command that ties it all together. It loads
-the configuration and starts all `Consumers` as needed.
+the configuration and starts all `Consumers`.
 - `Scheduler` is a command that takes care of scheduled tasks. It should run
 every minute via cron.
 
@@ -56,7 +56,7 @@ are a few more terms that will be explained where needed.
 
 ### Installation
 
-Install Disqontrol via Composer:
+Install Disqontrol with the PHP package manager, [Composer](https://getcomposer.org/):
 
 ``` bash
 composer require disqontrol/disqontrol
@@ -69,8 +69,8 @@ and configure Disqontrol. You need to fill out these sections:
 
 - `disque` contains the information about the connection to Disque
 - `queues` configures the queues and what worker should process the jobs
-for each queue. You can leave all parameters as default and configure
-just the worker for each queue.
+for each queue. You can leave all parameters as default and just configure
+the worker for each queue.
 - `consumers` - you can leave the whole section empty for starters, Disqontrol
 will spawn consumers with the default parameters.
 
@@ -94,8 +94,10 @@ If you use PHP workers, the setup is a bit more involved. See the documentation
 section "Using PHP Workers".
 
 See also examples at
+```
 docs/examples/app_bootstrap.php
 docs/examples/DisqontrolFactory.php
+```
 
 ### Adding jobs to Disque
 
@@ -171,6 +173,8 @@ disqontrol processjob
 ```
 
 It takes the same arguments as `addjob`, a queue and a JSON-serialized job body.
+The `processjob` command doesn't accept the `delay` parameter, because it makes
+no sense here.
 
 ### Regular, repeated jobs
 
@@ -204,7 +208,7 @@ An example crontab with regular jobs may look like this:
 The first job will run every day at 05:15 AM, the second job will run every
 Friday at 02:34 AM and the third job will run every 5 minutes.
 
-See also docs/examples/crontab
+See also `docs/examples/crontab`
 
 Run the scheduler every minute by adding this entry to your system crontab:
 
@@ -214,15 +218,41 @@ Run the scheduler every minute by adding this entry to your system crontab:
 
 ### What happens with failed jobs?
 
-TODO
+Failed jobs are returned to the queue with an ever longer, slightly randomized
+delay. This behavior is called "[exponential backoff](https://cloud.google.com/storage/docs/exponential-backoff)" and it is used so that
+Disque doesn't get slammed by many re-enqueued jobs in case something
+goes wrong.
+
+The exponential backoff in Disqontrol will retry a failed job
+
+ - 2 times in the first minute
+ - 5 times in the first hour
+ - 7 times in the first 24 hours
+ - following about one retry a day
+ - for a total of 37 retries in 30 days
+
+When the number of retries of a failed job reaches a certain configurable number
+and the job still wasn't successfully processed, it is moved to a queue
+for failed jobs, where you can inspect it. Jobs will stay
+in the failure queue until Disque deletes them, which is around 45 days.
+
+You can configure
+
+- the maximum number of retries and
+- the failure queue
+
+in the configuration for all queues together as well as for each queue
+individually.
+
+All failures are of course also logged.
 
 ### Using PHP workers
 
 PHP workers are workers (code that processes jobs) written in PHP and called
-directly via Disqontrol.
+directly by Disqontrol.
 
 You can of course write workers in any language (including PHP) and call them
-via the command line (or HTTP), but we call these "Command-Line/HTTP workers" - they are
+via the command line or HTTP. We call these "Command-Line/HTTP workers" and they are
 completely independent of Disqontrol.
 
 But because Disqontrol is written in PHP, it offers a few helper features
@@ -235,7 +265,7 @@ There are two types of PHP workers - inline PHP workers and isolated PHP workers
 
 The difference between them is simple: If the Consumer, the long-running
 process that listens for new jobs, receives a job that should be processed
-by an inline PHP worker, the worker is called directly in the Consumer process.
+by an inline PHP worker, the worker is executed directly in the Consumer process.
 
 If the job should be processed by an isolated PHP worker, the worker is called
 in a separate process created only for this one job.
@@ -248,9 +278,9 @@ require less computing capacity. Unlike isolated PHP workers they don't
 have to set up the environment (DB connection etc.) over and over again.
 
 It's up to you to choose the tradeoffs. PHP workers running just with
-few dependencies, in a lightweight environment, are probably better off
-when called inline. Heavy workers that need a connection to the DB, to the cache
-and to other external services, are probably safer to run in separate processes.
+few dependencies, in a lightweight environment, are faster when called
+inline. Heavy workers that need a connection to the DB, to the cache and
+ to other external services, are safer to run in separate processes.
 
 Fortunately you can switch between using isolated and inline PHP workers just by
 changing a single word in the configuration file and easily test what's better
@@ -260,7 +290,7 @@ for your particular situation.
 #### Writing PHP workers
 
 PHP workers must implement the `Disqontrol\Worker\WorkerInterface`.
-Each worker needs its own factory. A factory's purpose is to return a worker.
+Each worker needs its own factory. A factory's purpose is to return the worker.
 Worker factories must implement the `Disqontrol\Worker\WorkerFactoryInterface`.
 
 Worker factories and workers live outside of your application and don't have
@@ -287,7 +317,7 @@ $environmentSetup = function() {
 }
 ```
 
-The WorkerFactoryInterface that all worker factories must implement has
+The `WorkerFactoryInterface` that all worker factories must implement has
 a special method signature:
 
 ``` php
@@ -312,7 +342,7 @@ workers).
 To summarize:
 
 The environment setup code is registered with Disqontrol, but it is only
-called when it is needed (and only once). Its result is then injected into each
+called when it is needed - and only once. Its result is then injected into each
 worker factory.
 
 #### Registering PHP workers and the environment setup code in Disqontrol
@@ -329,7 +359,7 @@ You must create the connection for both of these cases.
 
 The connection has 4 steps:
 
-1. Instantiate a WorkerFactoryCollection
+1. Create a `WorkerFactoryCollection`
 2. Write and register a code that sets up the environment for your PHP workers.
 We talked about what the code should look like in the previous section.
 3. Instantiate and register worker factories for all your PHP workers
@@ -356,10 +386,10 @@ return $disqontrol;
 
 Save this code in a file, let's call it the Disqontrol bootstrap file.
 
-NOTE: For a longer and commented example, see `docs/examples/disqontrol_bootstrap.php`
+For a longer and commented example, see `docs/examples/disqontrol_bootstrap.php`
 
 When running Disqontrol as a command line application, tell it what bootstrap
-file it should use by adding the argument "--bootstrap":
+file it should use by adding the argument `--bootstrap`:
 
 ``` bash
 /path/to/disqontrol supervisor --bootstrap=/file/to/disqontrol_bootstrap.php
@@ -418,7 +448,7 @@ That's why we have decided to use just one queue - Disque - written by the autho
 of Redis.
 
 For the above mentioned reasons, we have no plans to support other queues.
-Instead we want to use all features of Disque fully.
+Instead we want to fully use all features of Disque.
 
 ### Alternatives
 
