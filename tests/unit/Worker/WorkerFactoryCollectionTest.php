@@ -62,7 +62,21 @@ class WorkerFactoryCollectionTest extends \PHPUnit_Framework_TestCase
 
         $workerFactory = m::mock(WorkerFactoryInterface::class)
             ->shouldReceive('create')
-            ->with(1)
+            ->with(1, anything())
+            ->getMock();
+        $this->wfc->addWorkerFactory(self::WORKER_NAME, $workerFactory);
+
+        $this->wfc->getWorker(self::WORKER_NAME);
+    }
+
+    public function testWorkerFactoryReceivesWorkerName()
+    {
+        $envSetup = new TestEnvironmentSetup();
+        $this->wfc->registerWorkerEnvironmentSetup([$envSetup, 'run']);
+
+        $workerFactory = m::mock(WorkerFactoryInterface::class)
+            ->shouldReceive('create')
+            ->with(anything(), self::WORKER_NAME)
             ->getMock();
         $this->wfc->addWorkerFactory(self::WORKER_NAME, $workerFactory);
 

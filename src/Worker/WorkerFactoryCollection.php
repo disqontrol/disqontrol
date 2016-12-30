@@ -82,7 +82,7 @@ class WorkerFactoryCollection implements WorkerFactoryCollectionInterface
         }
 
         $factory = $this->workerFactories[$workerName];
-        $worker = $factory->create($this->workerEnvironment);
+        $worker = $factory->create($this->workerEnvironment, $workerName);
 
         return $worker;
     }
