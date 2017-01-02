@@ -10,7 +10,10 @@
 
 namespace Disqontrol;
 
+use Disqontrol\Console\Command\AddJobCommand;
 use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Input\ArgvInput;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Exception;
 use UnexpectedValueException;
@@ -200,21 +203,15 @@ class DisqontrolApplication
         );
 
         $this->addGlobalBootstrapArgument($application);
+        $this->registerBootstrapFilePath();
+        $this->registerCommands($application);
 
-        $container = $this->disqontrol->getContainer();
-
-        $configuration = $container->get('configuration');
-        $configuration->setBootstrapFilePath($this->bootstrapFile);
-
-        $commandIds = $container->getParameter(
-            Disqontrol::CONTAINER_COMMANDS_KEY
-        );
-        foreach ($commandIds as $commandId) {
-            $command = $container->get($commandId);
-            $application->add($command);
+        $input = new ArgvInput($this->argv);
+        if ( ! $this->userAsksForHelp($input)) {
+            $this->disqontrol->checkPhpWorkers();
         }
 
-        $application->run();
+        $application->run($input);
     }
 
     /**
@@ -237,6 +234,56 @@ class DisqontrolApplication
 
         $newOption = new InputOption($name, $shortcut, $mode, $description, $defaultValue);
         $appDefinition->addOption($newOption);
+    }
+
+    /**
+     * Register the current bootstrap path as a configuration parameter
+     */
+    public function registerBootstrapFilePath()
+    {
+        $container = $this->disqontrol->getContainer();
+
+        $configuration = $container->get('configuration');
+        $configuration->setBootstrapFilePath($this->bootstrapFile);
+    }
+
+    /**
+     * Register available commands in the Symfony application
+     *
+     * @param Application $application
+     */
+    private function registerCommands(Application $application)
+    {
+        $container = $this->disqontrol->getContainer();
+
+        $commandIds = $container->getParameter(
+            Disqontrol::CONTAINER_COMMANDS_KEY
+        );
+
+        foreach ($commandIds as $commandId) {
+            $command = $container->get($commandId);
+            $application->add($command);
+        }
+    }
+
+    /**
+     * Check whether the user is asking for help with CLI commands
+     *
+     * @param InputInterface $input
+     *
+     * @return bool
+     */
+    private function userAsksForHelp(InputInterface $input)
+    {
+        // null, or no command, falls back to "list"
+        $skippedCommands = [null, 'help', 'list'];
+        $command = $input->getFirstArgument();
+
+        $skippedParameters = ['--help', '-h'];
+        $onlyParams = true;
+
+        return (in_array($command, $skippedCommands)
+            || $input->hasParameterOption($skippedParameters, $onlyParams));
     }
 
     /**
@@ -301,9 +348,6 @@ class DisqontrolApplication
 
     /**
      * Unset the argument with the given index
-     *
-     * We need to remove the config and bootstrap options from the $_SERVER
-     * array, because we don't want the Symfony application to use them.
      *
      * @param int $index
      */

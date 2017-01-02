@@ -127,7 +127,11 @@ class Disqontrol
         $this->processConfig($configFilePath);
         $this->initializeContainer();
         $this->prepareLogger();
-        $this->preparePhpWorkers($workerFactoryCollection);
+
+        if ($workerFactoryCollection === null) {
+            $workerFactoryCollection = new WorkerFactoryCollection();
+        }
+        $this->workerFactoryCollection = $workerFactoryCollection;
     }
 
     /**
@@ -176,6 +180,33 @@ class Disqontrol
     public function getWorkerFactoryCollection()
     {
         return $this->workerFactoryCollection;
+    }
+
+
+    /**
+     * Check whether we have all PHP workers
+     *
+     * @throws ConfigurationException
+     */
+    public function checkPhpWorkers() {
+        $config = $this->container->get('configuration');
+        $phpWorkers = $config->getPhpWorkers();
+
+        foreach ($phpWorkers as $workerName) {
+            if ( ! $this->workerFactoryCollection->hasWorkerFactory($workerName)) {
+                // We're missing a PHP worker we might need. Warn the user
+                // in the STD_ERR but don't quit, otherwise for example
+                // the help command won't work.
+
+                $warning = msg::phpJobWorkerFromConfigurationNotFound($workerName);
+                // We presume the user is sitting at the terminal right now
+                file_put_contents('php://stderr', $warning . PHP_EOL);
+                // But we also don't want him to miss the message in case he
+                // doesn't see it.
+                $logger = $this->container->get('monolog_logger');
+                $logger->warn($warning);
+            }
+        }
     }
 
     /**
@@ -364,42 +395,4 @@ class Disqontrol
     {
         return $this->configParams[ConfigDefinition::LOG_DIR];
     }
-
-    /**
-     * Prepare the WorkerFactoryCollection and check we know all PHP workers
-     *
-     * @param WorkerFactoryCollectionInterface $workerFactoryCollection
-     *
-     * @throws ConfigurationException
-     */
-    private function preparePhpWorkers(
-        WorkerFactoryCollectionInterface $workerFactoryCollection = null
-    ) {
-        if ($workerFactoryCollection === null) {
-            $workerFactoryCollection = new WorkerFactoryCollection();
-        }
-
-        $this->workerFactoryCollection = $workerFactoryCollection;
-        $config = $this->container->get('configuration');
-        $phpWorkers = $config->getPhpWorkers();
-
-        foreach ($phpWorkers as $workerName) {
-            if ( ! $workerFactoryCollection->workerExists($workerName)) {
-                // We're missing a PHP worker we might need. Warn the user
-                // in the STD_ERR but don't quit, otherwise for example
-                // the help command won't work.
-    
-                $warning = msg::phpJobWorkerFromConfigurationNotFound($workerName);
-                // We presume the user is sitting at the terminal right now
-                file_put_contents('php://stderr', $warning . PHP_EOL);
-                // But we also don't want him to miss the message in case he
-                // doesn't see it.
-                $logger = $this->container->get('monolog_logger');
-                $logger->warn($warning);
-
-            }
-        }
-
-    }
-
 }
