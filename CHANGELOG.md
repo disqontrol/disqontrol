@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- WorkerFactoryInterface can throw an exception if a worker is not supported (docblock change only)
+
+### Fixed
+- Bootstrap the worker environment only after we're sure the worker factory exists
 
 ## [0.2.0] - 2016-12-30
 ### Changed

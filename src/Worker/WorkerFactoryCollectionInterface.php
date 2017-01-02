@@ -100,13 +100,15 @@ interface WorkerFactoryCollectionInterface
     public function registerWorkerEnvironmentSetup(callable $workerSetup);
     
     /**
-     * Check if the worker exists, without setting up the environment
+     * Check if the worker factory exists, without setting up the environment
+     *
+     * @internal
      *
      * @param string $workerName
      *
      * @return bool
      */
-    public function workerExists($workerName);
+    public function hasWorkerFactory($workerName);
 
     /**
      * Get the worker defined under the given name

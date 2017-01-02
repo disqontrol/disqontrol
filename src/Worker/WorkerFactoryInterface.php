@@ -45,6 +45,9 @@ interface WorkerFactoryInterface
      * @param string $workerName
      *
      * @return WorkerInterface
+     *
+     * @throws Exception An exception can be thrown if the worker with that name
+     *                   is not supported
      */
     public function create($workerEnvironment, $workerName);
 }
