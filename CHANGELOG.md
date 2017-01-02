@@ -8,9 +8,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 - Fixed wrong check whether the user has registered all required PHP workers
 
+### Changed
+- Improved the initial experience by skipping the PHP worker check when just reading help
+
 ## [0.2.1] - 2017-01-02
 ### Added
 - WorkerFactoryInterface can throw an exception if a worker is not supported (docblock change only)
+
 
 ### Fixed
 - Bootstrap the worker environment only after we're sure the worker factory exists
