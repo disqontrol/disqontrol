@@ -65,7 +65,7 @@ class WorkerFactoryCollection implements WorkerFactoryCollectionInterface
     /**
      * {@inheritdoc}
      */
-    public function workerExists($workerName)
+    public function hasWorkerFactory($workerName)
     {
         return isset($this->workerFactories[$workerName]);
     }
@@ -75,14 +75,14 @@ class WorkerFactoryCollection implements WorkerFactoryCollectionInterface
      */
     public function getWorker($workerName)
     {
-        $this->setUpWorkerEnvironment();
-
-        if ( ! $this->workerExists($workerName)) {
+        if ( ! $this->hasWorkerFactory($workerName)) {
             throw new ConfigurationException(msg::phpJobWorkerNotFound($workerName));
         }
 
-        $factory = $this->workerFactories[$workerName];
-        $worker = $factory->create($this->workerEnvironment, $workerName);
+        $this->setUpWorkerEnvironment();
+        
+        $workerFactory = $this->workerFactories[$workerName];
+        $worker = $workerFactory->create($this->workerEnvironment, $workerName);
 
         return $worker;
     }

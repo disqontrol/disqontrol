@@ -10,6 +10,7 @@
 
 namespace Disqontrol\Worker;
 
+use Disqontrol\Exception\ConfigurationException;
 use Mockery as m;
 
 class WorkerFactoryCollectionTest extends \PHPUnit_Framework_TestCase
@@ -81,6 +82,24 @@ class WorkerFactoryCollectionTest extends \PHPUnit_Framework_TestCase
         $this->wfc->addWorkerFactory(self::WORKER_NAME, $workerFactory);
 
         $this->wfc->getWorker(self::WORKER_NAME);
+    }
+
+    public function testExceptionWhenFactoryIsMissing()
+    {
+        $envSetup = new TestEnvironmentSetup();
+        $this->wfc->registerWorkerEnvironmentSetup([$envSetup, 'run']);
+
+        $this->expectException(ConfigurationException::class);
+
+        try {
+            $this->wfc->getWorker(self::WORKER_NAME);
+        } catch (ConfigurationException $e) {
+            // Rethrow for PHPUnit
+            throw $e;
+        } finally {
+            // But also assert that the environment hasn't been setup
+            $this->assertEquals(0, $envSetup->runCount);
+        }
     }
 }
 
