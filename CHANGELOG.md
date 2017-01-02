@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- Fixed wrong check whether the user has registered all required PHP workers
 
 ## [0.2.1] - 2017-01-02
 ### Added

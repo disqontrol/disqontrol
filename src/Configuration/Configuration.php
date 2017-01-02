@@ -230,7 +230,6 @@ class Configuration
         return $this->getQueueParameterOrDefault($queue, Config::FAILURE_STRATEGY);
     }
 
-
     /**
      * Get max job process time from the configuration for the given queue
      *
@@ -429,9 +428,26 @@ class Configuration
         foreach ($this->getQueuesConfig() as $queue) {
             $worker = $queue[Config::WORKER];
             foreach ($worker as $key => $value) {
-                $possibleWorkerType = str_replace('-', '_', $key);
-                if ($possibleWorkerType === WorkerType::INLINE_PHP_WORKER
-                || $possibleWorkerType === WorkerType::ISOLATED_PHP_WORKER) {
+                if ($key === Config::WORKER_TYPE) {
+
+                    $workerType = str_replace('-', '_', $value);
+                    $phpWorkerTypes = [
+                        WorkerType::INLINE_PHP_WORKER,
+                        WorkerType::ISOLATED_PHP_WORKER
+                    ];
+
+                    if ( ! in_array($workerType, $phpWorkerTypes)) {
+                        // This is not a PHP worker
+                        break;
+                    }
+                }
+
+                $possibleAddressKeys = [
+                    Config::COMMAND_WORKER_COMMAND,
+                    Config::HTTP_WORKER_ADDRESS,
+                    Config::PHP_WORKER_NAME,
+                ];
+                if (in_array($key, $possibleAddressKeys)) {
                     $phpWorkers[] = $value;
                 }
             }
