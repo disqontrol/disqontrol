@@ -56,7 +56,7 @@ class Disqontrol
      * The application name and version
      */
     const NAME = 'Disqontrol';
-    const VERSION = '0.2.1';
+    const VERSION = '0.2.2';
 
     /**
      * Default paths

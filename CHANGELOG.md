@@ -5,11 +5,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [0.2.2] - 2017-01-03
 ### Fixed
-- Fixed wrong check whether the user has registered all required PHP workers
+- Fix wrong check whether the user has registered all required PHP workers
 
 ### Changed
-- Improved the initial experience by skipping the PHP worker check when just reading help
+- Improve the initial experience by skipping the PHP worker check when just reading help
 
 ## [0.2.1] - 2017-01-02
 ### Added
