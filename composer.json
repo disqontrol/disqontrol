@@ -19,7 +19,7 @@
     ],
     "require": {
         "php": ">=5.5.0",
-        "mariano/disque-php": "@dev",
+        "mariano/disque-php": "^2.0",
         "symfony/config": "^2.8|^3.0",
         "symfony/console": "^2.8|^3.0",
         "symfony/dependency-injection": "^2.8|^3.0",

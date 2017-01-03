@@ -9,7 +9,7 @@ disqontrol:
 
     # The initial connection to Disque
     # The order of nodes doesn't matter, we connect to a random one
-    # as recommended by the Disque author
+    # as recommended by Disque
     disque:
         # Node 1
         - host: '127.0.0.1'
@@ -61,15 +61,6 @@ disqontrol:
         # retry_immediately
         # - Retry the failed job immediately, until its time is up or the job
         #   is out of allowed retries.
-        #
-        # log_and_throw_away
-        # - This failure strategy is internal and is used in synchronous mode,
-        #   where retrying doesn't make sense. Do not use it for your queues.
-        #
-        # If you want to write your own failure strategy, implement the interface
-        # Disqontrol\Dispatcher\Failure\FailureStrategyInterface and register
-        # the strategy during bootstrap with
-        # Disqontrol\Dispatcher\Failure\FailureStrategyCollection::addFailureStrategy()
         failure_strategy: retry
 
         # How many times a failed job should be retried before we give up
