@@ -250,7 +250,7 @@ class FailJob
         $creationTime = (int)$job->getCreationTime();
         $jobLifetime = (int)$job->getJobLifetime();
 
-        if (empty($creationTime)) {
+        if ( ! isset($creationTime)) {
             return $jobLifetime;
         }
 
@@ -280,7 +280,7 @@ class FailJob
                 Msg::jobReachedRetryLimit($job->getId(), $maxRetries, $job->getOriginalId())
             );
         }
-            
+
         return $jobHasReachedRetryLimit;
     }
 
