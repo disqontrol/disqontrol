@@ -115,7 +115,7 @@ disqontrol:
                 command: 'php console email:send'
                 
                 # Console commands are called with the arguments:
-                # "--queue" followed by the queue name
+                # "--queue=" followed by the queue name
                 # "--body=" followed by a JSON-serialized job body.
                 # "--metadata=" followed by JSON-serialized job metadata
                 #

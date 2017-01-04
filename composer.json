@@ -39,6 +39,9 @@
         "scrutinizer/ocular": "^1.2",
         "mockery/mockery": "^0.9"
     },
+    "suggest": {
+        "ext-pcntl": "Allows graceful shutdown of consumers"
+    },
     "autoload": {
         "psr-4": {
             "Disqontrol\\": "src"
