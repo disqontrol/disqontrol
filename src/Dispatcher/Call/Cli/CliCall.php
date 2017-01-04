@@ -156,7 +156,7 @@ class CliCall extends AbstractCall implements CallInterface
         }
 
         // Generate an error message, if the process failed but we have no message
-        if ( ! $this->process->isSuccessful() and empty($this->errorMessage)) {
+        if ( ! $this->process->isSuccessful() && empty($this->errorMessage)) {
             // This exception makes nice, readable error messages. Let's use it
             $niceException = new ProcessFailedException($this->process);
             $this->errorMessage = $niceException->getMessage();

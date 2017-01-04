@@ -227,7 +227,7 @@ class Consumer implements ConsumerInterface
      */
     private function hasNoMoreJobsInBurstMode($jobsFromDisque, $burstMode)
     {
-        return empty($jobsFromDisque) and $burstMode === true;
+        return empty($jobsFromDisque) && $burstMode === true;
     }
     
     /**

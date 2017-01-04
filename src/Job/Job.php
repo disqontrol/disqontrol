@@ -247,9 +247,9 @@ class Job extends BaseJob implements JobInterface
      */
     private function isBodyWithMetadata($body)
     {
-        if (is_array($body) and count($body) === 2
-            and array_key_exists(self::KEY_BODY, $body)
-            and array_key_exists(self::KEY_METADATA, $body)) {
+        if (is_array($body) && count($body) === 2
+            && array_key_exists(self::KEY_BODY, $body)
+            && array_key_exists(self::KEY_METADATA, $body)) {
             return true;
         }
 

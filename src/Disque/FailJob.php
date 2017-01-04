@@ -109,9 +109,9 @@ class FailJob
      */
     public function nack(JobInterface $job, $delay = 0)
     {
-        if ($this->jobHasReachedRetryLimit($job) or
-            $this->jobLifetimeIsUp($job, $delay)) {
-
+        if ($this->jobHasReachedRetryLimit($job)
+            || $this->jobLifetimeIsUp($job, $delay)) {
+            
             return $this->moveToFailureQueue($job);
         }
 
@@ -247,12 +247,13 @@ class FailJob
      */
     private function calculateRemainingLifetime(JobInterface $job)
     {
-        $creationTime = (int)$job->getCreationTime();
         $jobLifetime = (int)$job->getJobLifetime();
-
-        if ( ! isset($creationTime)) {
+        
+        if ($job->getCreationTime() === null) {
             return $jobLifetime;
         }
+    
+        $creationTime = (int)$job->getCreationTime();
 
         $remainingLifetime = $creationTime + $jobLifetime - time();
 
@@ -296,7 +297,7 @@ class FailJob
     {
         $remainingLifetime = $this->calculateRemainingLifetime($job);
 
-        $lifetimeIsUp = ($remainingLifetime <= $delay or $remainingLifetime <= 0);
+        $lifetimeIsUp = ($remainingLifetime <= $delay || $remainingLifetime <= 0);
 
         if ($lifetimeIsUp) {
             $this->logger->debug(

@@ -15,6 +15,7 @@ use Disqontrol\Dispatcher\Call\Php\PhpCall;
 use Disqontrol\Router\WorkerDirectionsInterface;
 use Disqontrol\Job\JobInterface;
 use Disqontrol\Worker\WorkerFactoryCollectionInterface;
+use Exception;
 
 /**
  * A factory for creating PHP calls
