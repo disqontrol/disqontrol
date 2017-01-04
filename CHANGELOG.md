@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [0.2.3] - 2017-01-04
+### Fixed
+- Fix a lot of small issues shown by Scrutinizer, mostly coding standards
+
 ### Changed
 - Tighten the vendor version of disque-php (was: @dev)
 
