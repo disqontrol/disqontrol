@@ -32,8 +32,8 @@ class ProcessControl
     {
         $this->hasPcntl = (
             extension_loaded('pcntl')
-            and function_exists('pcntl_signal')
-            and function_exists('pcntl_signal_dispatch')
+            && function_exists('pcntl_signal')
+            && function_exists('pcntl_signal_dispatch')
         );
     }
 

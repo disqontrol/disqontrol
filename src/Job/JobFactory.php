@@ -69,7 +69,7 @@ class JobFactory
     }
 
     /**
-     * @param string $jobBody
+     * @param mixed  $jobBody
      * @param string $queue
      * @param string $jobId
      * @param int    $nacks
@@ -114,7 +114,7 @@ class JobFactory
         $jobHasNoLifetime = empty($job->getJobLifetime());
         $jobHasNoCreationTime = empty($job->getCreationTime());
 
-        return ($jobHasNoLifetime and $jobHasNoCreationTime);
+        return ($jobHasNoLifetime && $jobHasNoCreationTime);
     }
 
     /**
