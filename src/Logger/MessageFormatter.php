@@ -594,7 +594,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
      */
     private static function formatJobId($currentJobId, $originalJobId = '')
     {
-        if (empty($originalJobId) or $currentJobId === $originalJobId) {
+        if (empty($originalJobId) || $currentJobId === $originalJobId) {
             return $currentJobId;
         }
 

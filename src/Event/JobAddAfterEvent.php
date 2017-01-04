@@ -33,10 +33,12 @@ class JobAddAfterEvent extends Event
 
     /**
      * @param JobInterface $job
+     * @param bool         $result
      */
-    public function __construct(JobInterface $job)
+    public function __construct(JobInterface $job, $result)
     {
         $this->job = $job;
+        $this->result = $result;
     }
 
     /**

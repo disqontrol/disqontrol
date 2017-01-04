@@ -97,8 +97,8 @@ class JobMarshaller implements MarshallerInterface
     private function disqueResponseIsValid($disqueResponse)
     {
         if ( ! empty($disqueResponse[Response::KEY_ID])
-            and ! empty($disqueResponse[Response::KEY_BODY])
-            and ! empty($disqueResponse[QueueResponse::KEY_QUEUE])
+            && ! empty($disqueResponse[Response::KEY_BODY])
+            && ! empty($disqueResponse[QueueResponse::KEY_QUEUE])
         ) {
             return true;
         }

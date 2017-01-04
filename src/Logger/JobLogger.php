@@ -200,7 +200,7 @@ class JobLogger implements LoggerInterface
     protected function addJobDetails(array $context, $message, $level)
     {
         if ( ! empty($context[self::JOB_INDEX])
-            and $context[self::JOB_INDEX] instanceof JobInterface
+            && $context[self::JOB_INDEX] instanceof JobInterface
         ) {
             $job = $context[self::JOB_INDEX];
 
