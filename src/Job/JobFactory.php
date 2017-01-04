@@ -52,7 +52,7 @@ class JobFactory
     /**
      * Create a new job that is supposed to be sent to Disque
      *
-     * @param string $jobBody
+     * @param mixed  $jobBody
      * @param string $queue
      *
      * @return JobInterface A new job for Disque

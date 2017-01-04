@@ -25,7 +25,7 @@ use Disqontrol\Job\JobInterface;
  *
  * Call is an object that knows how exactly to call a worker and how
  * to tell a success from a failure.
- * 
+ *
  * @author Martin Schlemmer
  */
 interface JobDispatcherInterface
@@ -35,9 +35,8 @@ interface JobDispatcherInterface
      *
      * @param JobInterface[] $jobs Array of jobs to dispatch
      *
-     * @return ?
-     * TODO: For synchronous jobs, the method can return a boolean.
-     *       For asynchronous jobs, other methods must be used - callbacks/promises?
+     * @return bool|null Null in a normal dispatcher, a result in a synchronous
+     *                   dispatcher
      */
     public function dispatch(array $jobs);
 

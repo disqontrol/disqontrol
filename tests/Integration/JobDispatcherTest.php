@@ -26,13 +26,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Yaml\Yaml;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Container;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\Config\FileLocator;
 use Disqontrol\Configuration\ConsoleCommandsCompilerPass;
 use Disqontrol\Configuration\FailureStrategiesCompilerPass;
 use Symfony\Component\EventDispatcher\DependencyInjection\RegisterListenersPass;
-use Symfony\Component\DependencyInjection\Definition;
 use Disque\Client;
 use Mockery as m;
 use Disqontrol\Dispatcher\Call\Cli\ProcessFactory;
@@ -170,7 +168,7 @@ class JobDispatcherTest extends \PHPUnit_Framework_TestCase
             ->shouldReceive('isSuccessful')
                 ->andReturn(true)
             ->getMock();
-        
+
         $processFactory = m::mock(ProcessFactory::class)
             ->shouldReceive('create')
                 ->with(m::on(function ($cmd) use (&$command) {
