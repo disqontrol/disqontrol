@@ -59,8 +59,8 @@ disqontrol:
         #   be returned to the queue with an ever longer delay
         #
         # retry_immediately
-        # - Retry the failed job immediately, until its time is up or the job
-        #   is out of allowed retries.
+        # - Retry the failed job immediately, until the job runs out of allowed
+        #   retries.
         failure_strategy: retry
 
         # How many times a failed job should be retried before we give up
