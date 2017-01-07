@@ -146,12 +146,21 @@ Instead we want to fully use all features of Disque.
 
 The following features are planned for the 1.0 release:
 
-- HTTP workers (a job can be processed by an HTTP call)
-- Autoscaling of consumers ("just" the algorithm is missing, see
+- [x] Consumers pick up jobs and call workers
+- [x] Supervisor keeps Consumers alive
+- [x] Consumers quit gracefully
+- [x] Isolated and inline PHP workers
+- [x] Command-line workers
+- [x] Failing jobs re-enqueued with exponential backoff
+- [x] Disqontrol has access to a PHP app environment
+- [x] Scheduled repeated jobs
+- [x] Synchronous mode
+- [ ] HTTP workers (a job can be processed by an HTTP call)
+- [ ] Autoscaling of consumers ("just" the algorithm is missing, see
 `Disqontrol\Consumer\Autoscale\PredictiveAutoscaling`)
-- Using custom failure strategies (see `Disqontrol\Dispatcher\JobDispatcher`
+- [ ] Using custom failure strategies (see `Disqontrol\Dispatcher\JobDispatcher`
 and `Disqontrol\Dispatcher\Failure\FailureStrategyCollection`)
-- the `--config` parameter (for installations not using the bootstrap file,
+- [ ] The `--config` parameter (for installations not using the bootstrap file,
 eg. teams not writing PHP code)
 
 ## Change log
