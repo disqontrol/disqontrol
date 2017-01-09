@@ -59,8 +59,8 @@ class ConfigDefinition implements ConfigurationInterface
     const PHP_WORKER_NAME = 'name';
 
     /** Default values */
-    const LOG_DIR_DEFAULT = 'var/log';
-    const CACHE_DIR_DEFAULT = 'var/cache/disqontrol';
+    const LOG_DIR_DEFAULT = '/var/log/disqontrol';
+    const CACHE_DIR_DEFAULT = '/tmp/disqontrol';
     const MAX_RETRIES_DEFAULT = 25;
     const FAILURE_QUEUE_DEFAULT = 'failed-jobs';
     const JOB_PROCESS_TIMEOUT_DEFAULT = 600;

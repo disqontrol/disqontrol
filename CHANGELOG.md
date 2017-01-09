@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Changed
+- If paths in the configuration file are relative, they are no longer relative
+to the current working directory, but relative to the configuration file
 
 ## [0.2.3] - 2017-01-04
 ### Fixed

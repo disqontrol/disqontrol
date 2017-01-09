@@ -1,11 +1,15 @@
 disqontrol:
     # The log directory
-    # Default value: var/log
-    log_dir: var/log
+    # Default value: /var/log/disqontrol
+    #
+    # If the path is relative, it is relative to the configuration file.
+    log_dir: /var/log/disqontrol
 
     # The cache directory
-    # Default value: var/cache/disqontrol
-    cache_dir: var/cache/disqontrol
+    # Default value: /tmp/disqontrol
+    #
+    # If the path is relative, it is relative to the configuration file.
+    cache_dir: /tmp/disqontrol
 
     # The initial connection to Disque
     # The order of nodes doesn't matter, we connect to a random one

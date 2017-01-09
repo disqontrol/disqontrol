@@ -22,7 +22,6 @@ use Disqontrol\Worker\WorkerFactoryCollection;
 use Disqontrol\Worker\WorkerFactoryCollectionInterface;
 use Disque\Client;
 use Disqontrol\Producer\ProducerInterface;
-use Disqontrol\Consumer\ConsumerInterface;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Symfony\Component\Config\ConfigCache;
@@ -33,7 +32,6 @@ use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Dumper\PhpDumper;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 use Symfony\Component\EventDispatcher\DependencyInjection\RegisterListenersPass;
 use Symfony\Component\Yaml\Yaml;
 
@@ -96,9 +94,14 @@ class Disqontrol
      * @var Container
      */
     private $container;
+    
+    /**
+     * @var string Configuration file directory
+     */
+    private $configFileDir;
 
     /**
-     * @var string Configuration file
+     * @var string Configuration file path
      */
     private $configFile;
 
@@ -327,7 +330,8 @@ class Disqontrol
         }
 
         $this->configFile = $configFile;
-
+        $this->configFileDir = realpath(dirname($configFile));
+    
         return Yaml::parse(file_get_contents($configFile));
     }
 
@@ -376,23 +380,67 @@ class Disqontrol
      * We need this parameter before the configuration object is created,
      * otherwise we would ask it.
      *
+     * If the log path is relative, it is used as relative to the configuration
+     * file.
+     *
      * @return string
      */
     private function getCacheDir()
     {
-        return $this->configParams[ConfigDefinition::CACHE_DIR];
+        $cacheDir = $this->configParams[ConfigDefinition::CACHE_DIR];
+        
+        return $this->resolveDirFromConfig($cacheDir);
     }
 
     /**
-     * Get the log directory ppath from the configuration parameters
+     * Get the log directory path from the configuration parameters
      *
      * We need this parameter before the configuration object is created,
      * otherwise we would ask it.
+     * 
+     * If the log path is relative, it is used as relative to the configuration
+     * file.
      *
      * @return string
      */
     private function getLogDir()
     {
-        return $this->configParams[ConfigDefinition::LOG_DIR];
+        $logDir = $this->configParams[ConfigDefinition::LOG_DIR];
+        
+        return $this->resolveDirFromConfig($logDir);
+    }
+    
+    /**
+     * Resolve a path from the configuration that can be relative to the
+     * configuration file, or absolute
+     * 
+     * @param string $dir
+     * 
+     * @return string Resolved directory from the configuration
+     */
+    private function resolveDirFromConfig($dir)
+    {
+        $resultDir = $dir;
+        if ($this->isPathRelative($dir)) {
+            $resultDir = realpath($this->configFileDir . '/' . $dir);
+        }
+    
+        if ($resultDir === false) {
+            $resultDir = $dir;
+        }
+        
+        return $resultDir;
+    }
+    
+    /**
+     * Check if the given path is relative
+     * 
+     * @param string $path
+     *
+     * @return bool
+     */
+    private function isPathRelative($path)
+    {
+        return substr($path, 0, 1) !== '/';
     }
 }

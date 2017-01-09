@@ -36,14 +36,13 @@ cache_dir: /tmp/
 
 #### `log_dir`
 
-A path to the Disqontrol log file, relative to the current working
-directory, or absolute.
+A path to the Disqontrol log file, relative to the configuration file, or
+absolute.
 
 #### `cache_dir`
 
 A path where Disqontrol can save its cache files, relative to the
-current working directory, or absolute.
-
+configuration file, or absolute.
 
 ### Disque
 
