@@ -13,8 +13,14 @@ use OurApp\JobQueue\Worker\ResizePics;
  */
 class DisqontrolFactory
 {
-    const CONFIG_PATH = 'disqontrol.yml';
-
+    // Paths to the configuration and bootstrap files relative to the root 
+    // directory of your application
+    const CONFIG_PATH = '/config/disqontrol.yml';
+    const BOOTSTRAP_PATH = '/disqontrol_bootstrap.php';
+    
+    /**
+     * @var Disqontrol
+     */
     private $disqontrol;
 
     /**
@@ -77,11 +83,22 @@ class DisqontrolFactory
         $workerFactoryCollection->registerWorkerEnvironmentSetup(
             [$this, 'createEnvironment']
         );
+        
+        // Define the application root directory based on the location
+        // of this factory
+        $appRootDir = realpath(__DIR__ . '/../..');
+        $configFilePath = $appRootDir . self::CONFIG_PATH;
+        
+        // We need the path to the bootstrap file for isolated PHP workers
+        // called in a synchronous mode. If you don't use the synchronous
+        // mode, you can omit this argument.
+        $bootstrapFilePath = $appRootDir . self::BOOTSTRAP_PATH;
 
         $this->disqontrol = new Disqontrol(
-            self::CONFIG_PATH,
+            $configFilePath,
             $workerFactoryCollection,
-            $debug
+            $debug,
+            $bootstrapFilePath
         );
     }
 }

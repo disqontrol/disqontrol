@@ -55,7 +55,7 @@ class Disqontrol
      */
     const NAME = 'Disqontrol';
     const VERSION = '0.2.2';
-
+    
     /**
      * Default paths
      */
@@ -63,33 +63,33 @@ class Disqontrol
     const CONTAINER_CACHE_FILE = 'disqontrol.container.php';
     const SERVICES_FILE = 'services.yml';
     const APP_CONFIG_DIR_PATH = '/config';
-
+    
     /**
      * Keys for the service container parameters
      */
     const CONTAINER_COMMANDS_KEY = 'disqontrol.commands';
-
+    
     /**
      * Service ID and tags for the service container
      */
     const EVENT_LISTENER_TAG = 'disqontrol.event_listener';
     const EVENT_SUBSCRIBER_TAG = 'disqontrol.event_subscriber';
     const EVENT_DISPATCHER_SERVICE = 'event_dispatcher';
-
+    
     /**
      * A collection of worker factories that can create PHP workers
      *
      * @var WorkerFactoryCollectionInterface
      */
     private $workerFactoryCollection;
-
+    
     /**
      * Is Disqontrol running in debug mode?
      *
      * @var bool
      */
     private $debug = false;
-
+    
     /**
      * @var Container
      */
@@ -99,17 +99,17 @@ class Disqontrol
      * @var string Configuration file directory
      */
     private $configFileDir;
-
+    
     /**
      * @var string Configuration file path
      */
     private $configFile;
-
+    
     /**
      * @var array Array of configuration parameters
      */
     private $configParams;
-
+    
     /**
      * If no config file path is specified, the default config path is used instead
      *
@@ -118,25 +118,31 @@ class Disqontrol
      * @param string|null                           $configFilePath
      * @param WorkerFactoryCollectionInterface|null $workerFactoryCollection
      * @param bool                                  $debug
+     * @param string|null                           $bootstrapFilePath
      *
      * @throws ConfigurationException
      */
     public function __construct(
         $configFilePath = null,
         WorkerFactoryCollectionInterface $workerFactoryCollection = null,
-        $debug = false
+        $debug = false,
+        $bootstrapFilePath = null
     ) {
-        $this->debug = $debug;
+        $this->debug = (bool)$debug;
         $this->processConfig($configFilePath);
         $this->initializeContainer();
+        
+        $config = $this->container->get('configuration');
+        $config->setBootstrapFilePath($bootstrapFilePath);
+        
         $this->prepareLogger();
-
+        
         if ($workerFactoryCollection === null) {
             $workerFactoryCollection = new WorkerFactoryCollection();
         }
         $this->workerFactoryCollection = $workerFactoryCollection;
     }
-
+    
     /**
      * Get the Disqontrol service container
      *
@@ -146,7 +152,7 @@ class Disqontrol
     {
         return $this->container;
     }
-
+    
     /**
      * Get the Disque client
      *
@@ -156,7 +162,7 @@ class Disqontrol
     {
         return $this->container->get('disque');
     }
-
+    
     /**
      * Get a job producer
      *
@@ -173,10 +179,10 @@ class Disqontrol
         if ($synchronousMode) {
             return $this->container->get('synchronous_producer');
         }
-
+        
         return $this->container->get('producer');
     }
-
+    
     /**
      * @return WorkerFactoryCollectionInterface|null
      */
@@ -184,23 +190,23 @@ class Disqontrol
     {
         return $this->workerFactoryCollection;
     }
-
-
+    
     /**
      * Check whether we have all PHP workers
      *
      * @throws ConfigurationException
      */
-    public function checkPhpWorkers() {
+    public function checkPhpWorkers()
+    {
         $config = $this->container->get('configuration');
         $phpWorkers = $config->getPhpWorkers();
-
+        
         foreach ($phpWorkers as $workerName) {
             if ( ! $this->workerFactoryCollection->hasWorkerFactory($workerName)) {
                 // We're missing a PHP worker we might need. Warn the user
                 // in the STD_ERR but don't quit, otherwise for example
                 // the help command won't work.
-
+                
                 $warning = msg::phpJobWorkerFromConfigurationNotFound($workerName);
                 // We presume the user is sitting at the terminal right now
                 file_put_contents('php://stderr', $warning . PHP_EOL);
@@ -211,7 +217,7 @@ class Disqontrol
             }
         }
     }
-
+    
     /**
      * Initialize the service container
      *
@@ -221,7 +227,7 @@ class Disqontrol
     private function initializeContainer()
     {
         $containerClass = $this->getContainerClass();
-
+        
         $alwaysCheckCache = true;
         $cache = new ConfigCache($this->getCacheDir() . '/' . $containerClass . '.php', $alwaysCheckCache);
         if ( ! $cache->isFresh()) {
@@ -235,7 +241,7 @@ class Disqontrol
         $configFactory = $this->container->get('configuration_factory');
         $configFactory->setConfigArray($this->configParams);
     }
-
+    
     /**
      * Build the service container
      *
@@ -254,20 +260,20 @@ class Disqontrol
                 throw FilesystemException::cantWriteDirectory($dir, $name);
             }
         }
-
+        
         $container = new ContainerBuilder();
         $container->addObjectResource($this);
         $container->addResource(new FileResource($this->configFile));
-
+        
         $loader = new YamlFileLoader($container, new FileLocator($this->getConfigDir()));
         $loader->load(self::SERVICES_FILE);
         $container->addResource(
             new FileResource($this->getConfigDir() . '/' . self::SERVICES_FILE)
         );
-
+        
         $container->addCompilerPass(new ConsoleCommandsCompilerPass());
         $container->addCompilerPass(new FailureStrategiesCompilerPass());
-
+        
         $container->addCompilerPass(
             new RegisterListenersPass(
                 self::EVENT_DISPATCHER_SERVICE,
@@ -275,10 +281,10 @@ class Disqontrol
                 self::EVENT_SUBSCRIBER_TAG
             )
         );
-
+        
         return $container;
     }
-
+    
     /**
      * Dump the service container to PHP code in the cache
      *
@@ -292,7 +298,7 @@ class Disqontrol
         $content = $dumper->dump(array('class' => $class, 'file' => $cache->getPath()));
         $cache->write($content, $container->getResources());
     }
-
+    
     /**
      * Load and process configuration file.
      *
@@ -306,10 +312,10 @@ class Disqontrol
             new ConfigDefinition(),
             [$config]
         );
-
+        
         $this->configParams = $processedParams['disqontrol'];
     }
-
+    
     /**
      * Load config file
      *
@@ -328,13 +334,13 @@ class Disqontrol
         if ( ! file_exists($configFile)) {
             throw ConfigurationException::configFileNotFound($configFile);
         }
-
+        
         $this->configFile = $configFile;
         $this->configFileDir = realpath(dirname($configFile));
-    
+        
         return Yaml::parse(file_get_contents($configFile));
     }
-
+    
     /**
      * Create container class name
      *
@@ -347,10 +353,10 @@ class Disqontrol
     {
         $hashInput = $this->configFile . self::VERSION;
         $hash = substr(md5($hashInput), 0, 8);
-
+        
         return 'Disqontrol' . ($this->debug ? 'Debug' : '') . 'Container_' . $hash;
     }
-
+    
     /**
      * Prepare monolog logger
      */
@@ -359,11 +365,11 @@ class Disqontrol
         $streamHandler = new StreamHandler($this->getLogDir() . '/disqontrol.log', Logger::DEBUG);
         $lineFormatter = new LineFormatter();
         $streamHandler->setFormatter($lineFormatter);
-
+        
         $logger = $this->container->get('monolog_logger');
         $logger->pushHandler($streamHandler);
     }
-
+    
     /**
      * Get the config directory path
      *
@@ -373,7 +379,7 @@ class Disqontrol
     {
         return App::getRootDir() . self::APP_CONFIG_DIR_PATH;
     }
-
+    
     /**
      * Get the cache directory path from the configuration parameters
      *
@@ -391,13 +397,13 @@ class Disqontrol
         
         return $this->resolveDirFromConfig($cacheDir);
     }
-
+    
     /**
      * Get the log directory path from the configuration parameters
      *
      * We need this parameter before the configuration object is created,
      * otherwise we would ask it.
-     * 
+     *
      * If the log path is relative, it is used as relative to the configuration
      * file.
      *
@@ -413,9 +419,9 @@ class Disqontrol
     /**
      * Resolve a path from the configuration that can be relative to the
      * configuration file, or absolute
-     * 
+     *
      * @param string $dir
-     * 
+     *
      * @return string Resolved directory from the configuration
      */
     private function resolveDirFromConfig($dir)
@@ -424,7 +430,7 @@ class Disqontrol
         if ($this->isPathRelative($dir)) {
             $resultDir = realpath($this->configFileDir . '/' . $dir);
         }
-    
+        
         if ($resultDir === false) {
             $resultDir = $dir;
         }
@@ -434,7 +440,7 @@ class Disqontrol
     
     /**
      * Check if the given path is relative
-     * 
+     *
      * @param string $path
      *
      * @return bool

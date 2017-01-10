@@ -153,8 +153,14 @@ $picResizeWorkerFactory = new ExampleWorkerFactory();
 $workerFactoryCollection->addWorkerFactory('pic_resize_worker', $picResizeWorkerFactory);
 
 $pathToConfig = '/path/to/disqontrol.yml';
+$pathToBootstrap = '/path/to/disqontrol_bootstrap.php';
 $debug = true;
-$disqontrol = new Disqontrol\Disqontrol($pathToConfig, $workerFactoryCollection, $debug);
+$disqontrol = new Disqontrol\Disqontrol(
+    $pathToConfig,
+    $workerFactoryCollection,
+    $debug,
+    $pathToBootstrap
+);
 return $disqontrol;
 ```
 

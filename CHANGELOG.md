@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- The Disqontrol class now accepts a fourth argument in the constructor, a path
+to the bootstrap file. This is needed for isolated PHP workers in synchronous
+mode.
+
 ### Changed
 - If paths in the configuration file are relative, they are no longer relative
 to the current working directory, but relative to the configuration file
