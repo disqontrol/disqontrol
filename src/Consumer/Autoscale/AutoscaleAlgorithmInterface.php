@@ -22,6 +22,9 @@ interface AutoscaleAlgorithmInterface
 {
     /**
      * Calculate the recommended number of consumer processes
+     * 
+     * This method is called every Supervisor::LOOP_PAUSE microseconds
+     * from ConsumerProcessGroup::checkOnConsumers()
      *
      * @param $currentProcessCount int How many processes are active now
      *

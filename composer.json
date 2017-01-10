@@ -32,7 +32,8 @@
         "gerritdrost/phenum": "^1.0",
         "monolog/monolog": "^1.17",
         "webmozart/json": "^1.2",
-        "vivait/backoff": "^1.0"
+        "vivait/backoff": "^1.0",
+        "revisor/trend": "^0"
     },
     "require-dev": {
         "phpunit/phpunit" : "^5.0",

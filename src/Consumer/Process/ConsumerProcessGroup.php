@@ -113,7 +113,9 @@ class ConsumerProcessGroup
         $this->freeMemory();
 
         $currentProcessCount = count($this->processes);
-        $targetProcessCount = $this->autoscaleAlgorithm->calculateProcessCount($currentProcessCount);
+        $targetProcessCount = $this->autoscaleAlgorithm->calculateProcessCount(
+            $currentProcessCount
+        );
         $this->spawnProcesses($targetProcessCount);
     }
 
