@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [0.3.0] - 2017-01-11
 ### Added
 - The Disqontrol class now accepts a fourth argument in the constructor, a path
 to the bootstrap file. This is needed for isolated PHP workers in synchronous
