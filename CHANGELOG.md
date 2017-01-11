@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- If a path in the config is relative and it doesn't exist, try creating it
+instead of falling back to relative to CWD. That silent fallback is confusing.
 
 ## [0.3.0] - 2017-01-11
 ### Added

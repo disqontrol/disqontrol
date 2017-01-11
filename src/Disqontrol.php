@@ -426,16 +426,11 @@ class Disqontrol
      */
     private function resolveDirFromConfig($dir)
     {
-        $resultDir = $dir;
         if ($this->isPathRelative($dir)) {
-            $resultDir = realpath($this->configFileDir . '/' . $dir);
+            $dir = $this->configFileDir . '/' . $dir;
         }
         
-        if ($resultDir === false) {
-            $resultDir = $dir;
-        }
-        
-        return $resultDir;
+        return $dir;
     }
     
     /**
