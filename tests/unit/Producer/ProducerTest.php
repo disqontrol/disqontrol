@@ -14,6 +14,7 @@ use Disqontrol\Disque\AddJob;
 use Mockery as m;
 use Disqontrol\Job\Job;
 use Disqontrol\Configuration\Configuration;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Disqontrol\Event\JobAddBeforeEvent;
 use Disqontrol\Event\JobAddAfterEvent;
@@ -85,13 +86,31 @@ class ProducerTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(self::JOB_LIFETIME, $job->getJobLifetime());
     }
 
-    private function createProducer($addJob = null)
+    public function testAddingAJobToUndefinedQueue()
+    {
+        $queue = 'undefined-queue';
+
+        $logger = m::mock(LoggerInterface::class)
+            ->shouldReceive('debug')
+            ->once()
+            ->getMock();
+
+        $producer = $this->createProducer(null, $logger);
+
+        $job = new Job('body', $queue);
+        $result = $producer->add($job);
+        $this->assertTrue($result);
+    }
+
+    private function createProducer($addJob = null, $logger = null)
     {
         $config = m::mock(Configuration::class)
             ->shouldReceive('getJobProcessTimeout')
             ->andReturn(self::JOB_PROCESS_TIMEOUT)
             ->shouldReceive('getJobLifetime')
             ->andReturn(self::JOB_LIFETIME)
+            ->shouldReceive('getQueuesConfig')
+            ->andReturn([self::JOB_QUEUE => 'queue options'])
             ->getMock();
 
         $eventDispatcher = m::mock(EventDispatcher::class)
@@ -110,7 +129,13 @@ class ProducerTest extends \PHPUnit_Framework_TestCase
                 ->getMock();
         }
 
-        $p = new Producer($config, $eventDispatcher, $addJob);
+        if ( ! isset($logger)) {
+            $logger = m::mock(LoggerInterface::class)
+                ->shouldNotReceive('debug')
+                ->getMock();
+        }
+
+        $p = new Producer($config, $eventDispatcher, $addJob, $logger);
 
         return $p;
     }

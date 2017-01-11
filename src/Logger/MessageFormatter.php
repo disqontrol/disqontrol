@@ -42,6 +42,7 @@ class MessageFormatter
     const SUPERVISOR_SPAWNED_DEFAULT_PROCESS_GROUP = 'Supervisor spawned a default consumer process group for queues %s';
     const SCHEDULER_RUNS_JOB = 'Scheduler is running %s';
     const ISOLATED_PHP_WORKER_FAILED = 'The PHP worker %s failed when processing job %s in a separate process. %s';
+    const JOB_ADDED_TO_UNDEFINED_QUEUE = 'A job %s was added to an undefined queue "%s"';
 
     /**
      * Exception messages
@@ -572,6 +573,19 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
     public static function workerCommandMissingParameters($commandName)
     {
         return sprintf(self::WORKER_COMMAND_MISSING_PARAMETERS, $commandName);
+    }
+
+    /**
+     * A job was added to the undefined queue
+     *
+     * @param string $jobId
+     * @param string $queue
+     *
+     * @return string
+     */
+    public static function jobAddedToUndefinedQueue($jobId, $queue)
+    {
+        return sprintf(self::JOB_ADDED_TO_UNDEFINED_QUEUE, $jobId, $queue);
     }
 
     /**

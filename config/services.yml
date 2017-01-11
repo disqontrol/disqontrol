@@ -71,6 +71,7 @@ services:
             - '@configuration'
             - '@event_dispatcher'
             - '@add_job'
+            - '@logger'
 
     fail_job:
         class: Disqontrol\Disque\FailJob

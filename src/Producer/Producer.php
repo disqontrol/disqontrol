@@ -16,7 +16,10 @@ use Disqontrol\Event\JobAddAfterEvent;
 use Disqontrol\Event\Events;
 use Disqontrol\Job\JobInterface;
 use Disqontrol\Configuration\Configuration;
+use Disqontrol\Logger\JobLogger;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Disqontrol\Logger\MessageFormatter as Msg;
 
 /**
  * Producer sends jobs to the queue
@@ -41,18 +44,26 @@ class Producer implements ProducerInterface
     private $addJob;
 
     /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
      * @param Configuration            $config
      * @param EventDispatcherInterface $eventDispatcher
-     * @param AddJob                 $jobAdder
+     * @param AddJob                   $jobAdder
+     * @param LoggerInterface          $logger
      */
     public function __construct(
         Configuration $config,
         EventDispatcherInterface $eventDispatcher,
-        AddJob $jobAdder
+        AddJob $jobAdder,
+        LoggerInterface $logger
     ) {
         $this->config = $config;
         $this->eventDispatcher = $eventDispatcher;
         $this->addJob = $jobAdder;
+        $this->logger = $logger;
     }
 
     /**
@@ -61,6 +72,7 @@ class Producer implements ProducerInterface
     public function add(JobInterface $job, $delay = 0)
     {
         $queue = $job->getQueue();
+
         $jobProcessTimeout = $this->config->getJobProcessTimeout($queue);
         $jobLifetime = $this->config->getJobLifetime($queue);
 
@@ -93,6 +105,27 @@ class Producer implements ProducerInterface
         $postAddEvent = new JobAddAfterEvent($job, $result);
         $this->eventDispatcher->dispatch(Events::JOB_ADD_AFTER, $postAddEvent);
 
+        // Log if the job was added to an undefined queue
+        if ( ! $this->isQueueDefined($queue) && $jobId !== false) {
+            $this->logger->debug(
+                Msg::jobAddedToUndefinedQueue($jobId, $queue)
+            );
+        }
+
         return $result;
+    }
+
+    /**
+     * Check if is the queue defined in the configuration
+     *
+     * @param string $queue
+     *
+     * @return bool
+     */
+    private function isQueueDefined($queue)
+    {
+        $queuesConfig = $this->config->getQueuesConfig();
+
+        return array_key_exists($queue, $queuesConfig);
     }
 }
