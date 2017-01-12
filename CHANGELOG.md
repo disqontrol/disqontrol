@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- Add an execute permission for the Disqontrol binary
 
 ## [0.3.2] - 2017-01-12
 ### Added
