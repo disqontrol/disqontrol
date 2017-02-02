@@ -72,8 +72,11 @@ class ProcessGroupFactory
         $jobBatch = $this->atLeastOne($jobBatch);
 
         // TODO: Allow the user to choose an autoscale algorithm
-        $autoscaleAlgorithm = $this->autoscaleAlgorithmFactory
-            ->createConstantAlgorithm($minProcessCount);
+        $autoscaleAlgorithm = $this->autoscaleAlgorithmFactory->createPredictiveAlgorithm(
+            $queues,
+            $minProcessCount,
+            $maxProcessCount
+        );
 
         return new ConsumerProcessGroup(
             $queues,

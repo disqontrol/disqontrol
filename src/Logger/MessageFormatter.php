@@ -43,7 +43,9 @@ class MessageFormatter
     const SCHEDULER_RUNS_JOB = 'Scheduler is running %s';
     const ISOLATED_PHP_WORKER_FAILED = 'The PHP worker %s failed when processing job %s in a separate process. %s';
     const JOB_ADDED_TO_UNDEFINED_QUEUE = 'A job %s was added to an undefined queue "%s"';
-
+    const RECORD_JOB_COUNT = 'Autoscaling recorded a job count %i for queues "%s"';
+    const CALCULATED_JOB_COUNT_TREND = 'Autoscaling calculated a short trend %i, a long trend %i, and suggested %i processes for queues "%s"';
+    
     /**
      * Exception messages
      */
@@ -59,12 +61,12 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
     const MISSING_CRONTAB_PATH = 'Add a path to the crontab file';
     const FILE_NOT_FOUND = 'The file "%s" was not found';
     const WORKER_COMMAND_MISSING_PARAMETERS = 'The %s command is missing one or more required parameters (queue, body, metadata)';
-
+    
     /**
      * Helper template
      */
     const TWO_JOB_IDS = '%s (now %s)';
-
+    
     /**
      * Format a message with job details
      *
@@ -82,7 +84,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
             $serializedJobBody
         );
     }
-
+    
     /**
      * Added a job
      *
@@ -100,7 +102,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
             $queue
         );
     }
-
+    
     /**
      * NACKed a job
      *
@@ -120,7 +122,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
             $delay
         );
     }
-
+    
     /**
      * Failed to unmarshal an incomplete Disque response
      *
@@ -130,7 +132,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
     {
         return self::FAILED_UNMARSHAL_INCOMPLETE_RESPONSE;
     }
-
+    
     /**
      * Failed to serialize a job body
      *
@@ -142,7 +144,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
     {
         return sprintf(self::FAILED_SERIALIZE_JOB_BODY, $message);
     }
-
+    
     /**
      * Failed to deserialize a job body
      *
@@ -154,7 +156,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
     {
         return sprintf(self::FAILED_DESERIALIZE_JOB_BODY, $message);
     }
-
+    
     /**
      * Failed to process a job
      *
@@ -174,7 +176,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
             $message
         );
     }
-
+    
     /**
      * Job failed too many times, moving it to the failure queue
      *
@@ -198,7 +200,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
             $message
         );
     }
-
+    
     /**
      * Moved a job to its failure queue
      *
@@ -218,6 +220,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
             $failureQueue
         );
     }
+    
     /**
      * Job was successfully processed
      *
@@ -235,7 +238,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
             $queue
         );
     }
-
+    
     /**
      * Failed to NACK a job
      *
@@ -257,7 +260,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
             $processTimeout
         );
     }
-
+    
     /**
      * Failed to move the job to its failure queue. The job is lost.
      *
@@ -277,7 +280,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
             $failureQueue
         );
     }
-
+    
     /**
      * Failed to remove job from the source queue when moving it
      *
@@ -301,7 +304,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
             $targetQueue
         );
     }
-
+    
     /**
      * Unknown worker type in the configuration
      *
@@ -313,7 +316,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
     {
         return sprintf(self::UNKNOWN_WORKER_TYPE, $type);
     }
-
+    
     /**
      * Job worker not found in the job router
      *
@@ -331,7 +334,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
             $queue
         );
     }
-
+    
     /**
      * A PHP worker was not found in the WorkerFactoryCollection
      *
@@ -343,7 +346,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
     {
         return sprintf(self::PHP_JOB_WORKER_NOT_FOUND, $workerName);
     }
-
+    
     /**
      * A PHP worker that is defined in the config was not registered during startup
      *
@@ -355,7 +358,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
     {
         return sprintf(self::PHP_JOB_WORKER_FROM_CONFIGURATION_NOT_FOUND, $workerName);
     }
-
+    
     /**
      * Failed to NACK a job
      *
@@ -375,7 +378,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
             $message
         );
     }
-
+    
     /**
      * Failed to unmarshal job data coming from Disque
      *
@@ -388,7 +391,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
     {
         return sprintf(self::FAILED_TO_UNMARSHAL_JOB, $jobData, $reason);
     }
-
+    
     /**
      * Received a signal to terminate, shutting down
      *
@@ -400,7 +403,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
     {
         return sprintf(self::RECEIVED_TERMINATE_SIGNAL, $receiver);
     }
-
+    
     /**
      * Added missing job time data to a job
      *
@@ -420,7 +423,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
             $jobLifetime
         );
     }
-
+    
     /**
      * Job has reached its retry limit
      *
@@ -438,7 +441,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
             $retries
         );
     }
-
+    
     /**
      * Job is out of time (its lifetime is up)
      *
@@ -456,7 +459,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
             $lifetime
         );
     }
-
+    
     /**
      * There are consumers configured for undefined queues
      *
@@ -471,7 +474,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
             implode(', ', $queues)
         );
     }
-
+    
     /**
      * Starting a consumer process
      *
@@ -483,7 +486,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
     {
         return sprintf(self::STARTING_CONSUMER_PROCESS, $cmd);
     }
-
+    
     /**
      * Supervisor spawned a consumer process group
      *
@@ -494,9 +497,10 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
     public static function supervisorSpawnedProcessGroup(array $queues)
     {
         $queues = implode(', ', $queues);
+        
         return sprintf(self::SUPERVISOR_SPAWNED_PROCESS_GROUP, $queues);
     }
-
+    
     /**
      * Supervisor spawned a default consumer process group
      *
@@ -507,9 +511,10 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
     public static function supervisorSpawnedDefaultProcessGroup(array $queues)
     {
         $queues = implode(', ', $queues);
+        
         return sprintf(self::SUPERVISOR_SPAWNED_DEFAULT_PROCESS_GROUP, $queues);
     }
-
+    
     /**
      * Scheduler runs a job
      *
@@ -521,7 +526,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
     {
         return sprintf(self::SCHEDULER_RUNS_JOB, $crontabEntry);
     }
-
+    
     /**
      * Missing the path to the crontab file
      *
@@ -531,7 +536,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
     {
         return self::MISSING_CRONTAB_PATH;
     }
-
+    
     /**
      * File not found
      *
@@ -543,7 +548,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
     {
         return sprintf(self::FILE_NOT_FOUND, $path);
     }
-
+    
     /**
      * The isolated PHP worker failed when processing a job
      *
@@ -562,7 +567,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
             $errMsg
         );
     }
-
+    
     /**
      * The worker command is missing parameters queue, body, metadata
      *
@@ -574,7 +579,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
     {
         return sprintf(self::WORKER_COMMAND_MISSING_PARAMETERS, $commandName);
     }
-
+    
     /**
      * A job was added to the undefined queue
      *
@@ -587,13 +592,48 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
     {
         return sprintf(self::JOB_ADDED_TO_UNDEFINED_QUEUE, $jobId, $queue);
     }
-
+    
+    /**
+     * Autoscaling algorithm recorded a job count for the given queues
+     *
+     * @param int   $jobCount
+     * @param array $queues
+     *
+     * @return string
+     */
+    public static function recordJobCount($jobCount, array $queues)
+    {
+        $queues = implode(', ', $queues);
+        
+        return sprintf(self::RECORD_JOB_COUNT, $jobCount, $queues);
+    }
+    
+    /**
+     * @param float $shortTrend
+     * @param float $longTrend
+     * @param int   $suggestedProcessCount
+     * @param array $queues
+     *
+     * @return string
+     */
+    public static function calculatedJobCountTrend(
+        $shortTrend,
+        $longTrend,
+        $suggestedProcessCount,
+        array $queues
+    ) {
+        $queues = implode(', ', $queues);
+        
+        return sprintf(self::CALCULATED_JOB_COUNT_TREND, $shortTrend, $longTrend, $suggestedProcessCount, $queues);
+    }
+    
     /**
      * Format a job ID for the log message
      *
      * Because of a missing Disque functionality, jobs can change their IDs.
+     *
      * @see explanation for Disqontrol\Job\Job::KEY_ORIGINAL_ID
-     * In that case we want to log both the original as well as the current ID.
+     *      In that case we want to log both the original as well as the current ID.
      *
      * This method takes care of formatting the ID (or IDs) for all messages.
      * It is written in such a way that if Disque ever starts supporting the
@@ -611,7 +651,7 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
         if (empty($originalJobId) || $currentJobId === $originalJobId) {
             return $currentJobId;
         }
-
+        
         return sprintf(self::TWO_JOB_IDS, $originalJobId, $currentJobId);
     }
 }
