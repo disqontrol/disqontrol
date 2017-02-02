@@ -39,7 +39,7 @@ class Supervisor
      *
      * 5000000 microseconds = 5 seconds
      */
-    const LOOP_PAUSE = 5000000;
+    const LOOP_PAUSE = 1000000;
 
     /**
      * @var Configuration

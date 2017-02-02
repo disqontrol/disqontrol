@@ -57,9 +57,11 @@ class Measurements
     public function recordJobCount($jobCount, $time = null)
     {
         if (is_null($time)) {
-            $timeAsFloat = false;
+            $timeAsFloat = true;
             $time = microtime($timeAsFloat);
         }
+        
+        $time = (string) $time;
         
         $this->measurements[] = [$time => $jobCount];
     }
@@ -75,6 +77,8 @@ class Measurements
             $this->measurements, 
             $secondsToKeep
         );
+        
+        $this->measurements = array_values($this->measurements);
     }
     
     /**
@@ -90,6 +94,13 @@ class Measurements
             $this->measurements,
             $timeSpan
         );
+        $oldestTimestamp = strtotime('-29.5 years');
+        
+        foreach ($trendData as $key => $point) {
+            $time = (float)key($point) - $oldestTimestamp;
+            $trendData[$key] = [(int)$time => current($point)];
+        }
+        
         $trend = $this->trendCalculator->calculateTrend($trendData);
         
         return $trend;

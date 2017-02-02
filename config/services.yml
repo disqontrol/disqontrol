@@ -208,6 +208,10 @@ services:
 
     autoscale_algorithm_factory:
         class: Disqontrol\Consumer\Autoscale\AutoscaleAlgorithmFactory
+        arguments:
+            - '@disque'
+            - '@trend_calculator'
+            - '@logger'
 
     process_group_factory:
         class: Disqontrol\Consumer\Process\ProcessGroupFactory
@@ -282,3 +286,6 @@ services:
             - '@job_serializer'
         tags:
             - { name: disqontrol.command }
+
+    trend_calculator:
+        class: Revisor\Trend\TrendCalculator

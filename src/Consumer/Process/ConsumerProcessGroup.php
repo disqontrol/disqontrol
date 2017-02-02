@@ -116,6 +116,7 @@ class ConsumerProcessGroup
         $targetProcessCount = $this->autoscaleAlgorithm->calculateProcessCount(
             $currentProcessCount
         );
+        
         $this->spawnProcesses($targetProcessCount);
     }
 

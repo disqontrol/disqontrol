@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- A predictive autoscaling sampling the trend of jobs in a queue every minute
 
 ## [0.3.3] - 2017-01-13
 ### Added

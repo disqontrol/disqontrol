@@ -26,12 +26,12 @@ class PredictiveAutoscaling implements AutoscaleAlgorithmInterface
      * 
      * Older measurements will be discarded
      */
-    const MAX_MEASUREMENT_AGE = 300;
+    const MAX_MEASUREMENT_AGE = 10;
     
     /**
      * The time span for the short trend calculation in seconds
      */
-    const SHORT_TREND_SPAN = 60;
+    const SHORT_TREND_SPAN = 5;
     
     /**
      * @var string[] Names of the queues the consumer group listens to
@@ -64,14 +64,11 @@ class PredictiveAutoscaling implements AutoscaleAlgorithmInterface
     private $measurements;
     
     /**
-     * @var int The first planned calculation time (UNIX timestamp)
-     */
-    private $firstTrendCalculationTime = 0;
-    
-    /**
      * @var int The last time the trend was calculated (UNIX timestamp)
      */
     private $lastTrendCalculationTime = 0;
+    
+    private $jobCount = 0;
     
     /**
      * @param array           $queues
@@ -97,8 +94,7 @@ class PredictiveAutoscaling implements AutoscaleAlgorithmInterface
         $this->measurements = $emptyMeasurements;
         $this->logger = $logger;
         
-        $this->firstTrendCalculationTime = time() + self::MAX_MEASUREMENT_AGE; 
-        $this->lastTrendCalculationTime = time();
+        $this->lastTrendCalculationTime = time() + self::MAX_MEASUREMENT_AGE - self::SHORT_TREND_SPAN;
     }
     
     /**
@@ -114,8 +110,10 @@ class PredictiveAutoscaling implements AutoscaleAlgorithmInterface
             return $this->minProcessCount;
         }
         
+        $this->lastTrendCalculationTime = time();
+        
         $longTrend = $this->measurements->calculateTrend(self::MAX_MEASUREMENT_AGE);
-        $shortTrend = $this->measurements->calculateTrend(self::SHORT_TREND_SPAN);
+        //$shortTrend = $this->measurements->calculateTrend(self::SHORT_TREND_SPAN);
         
         $suggestedProcessCount = $currentProcessCount;
         // If both trends are growing, suggest increasing the process count
@@ -143,6 +141,8 @@ class PredictiveAutoscaling implements AutoscaleAlgorithmInterface
             $jobCount += $this->disque->qlen($queue);
         }
         
+        $jobCount = $this->jobCount++;
+        
         $this->measurements->recordJobCount($jobCount);
         $this->measurements->truncateMeasurements(self::MAX_MEASUREMENT_AGE);
         
@@ -160,11 +160,9 @@ class PredictiveAutoscaling implements AutoscaleAlgorithmInterface
     private function isTimeToCalculateTrend()
     {
         $now = time();
-        
-        $first = $this->firstTrendCalculationTime < $now;
         $last = ($this->lastTrendCalculationTime + self::SHORT_TREND_SPAN) < $now;
         
-        return $first && $last;
+        return $last;
     }
     
 }

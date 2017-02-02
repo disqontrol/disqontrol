@@ -226,27 +226,4 @@ disqontrol:
     # with the default values. If you begin and don't yet know the performance
     # profile of your queues, you can leave the whole section empty.
     consumers:
-        # Definition of a multi-queue consumer
-        # A multi-queue consumer will ask for jobs from multiple queues at once.
-        # This can be useful for queues with rare jobs.
-        # Beware of the indentation
-        - queues:
-            - 'registration-email'
-            - 'profile-update'
-          min_processes: 2
-          max_processes: 10
-          job_batch: 5
 
-        # Another consumer, this time only for one queue
-        # All missing parameters except the queue name will use the default
-        # values defined in the section `consumer_defaults`
-        - queues:
-            - 'pic-resize'
-
-        # Each queue that is not assigned to any consumer in this section will
-        # be served by the default consumer with the defaults defined in
-        # 'consumer-defaults'.
-        # In our example we haven't assigned the last queue, 'rss-update',
-        # to any consumer. The default consumer will spawn 1 process, can
-        # autoscale to 5 processes and will try to work in batches of 10 jobs
-        # at once.

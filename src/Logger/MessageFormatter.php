@@ -43,8 +43,8 @@ class MessageFormatter
     const SCHEDULER_RUNS_JOB = 'Scheduler is running %s';
     const ISOLATED_PHP_WORKER_FAILED = 'The PHP worker %s failed when processing job %s in a separate process. %s';
     const JOB_ADDED_TO_UNDEFINED_QUEUE = 'A job %s was added to an undefined queue "%s"';
-    const RECORD_JOB_COUNT = 'Autoscaling recorded a job count %i for queues "%s"';
-    const CALCULATED_JOB_COUNT_TREND = 'Autoscaling calculated a short trend %i, a long trend %i, and suggested %i processes for queues "%s"';
+    const RECORD_JOB_COUNT = 'Autoscaling recorded a job count %d for queues "%s"';
+    const CALCULATED_JOB_COUNT_TREND = 'Autoscaling calculated a short trend %f, a long trend %f, and suggested %d processes for queues "%s"';
     
     /**
      * Exception messages
@@ -624,7 +624,9 @@ in the WorkerFactoryCollection when instantiating Disqontrol.';
     ) {
         $queues = implode(', ', $queues);
         
-        return sprintf(self::CALCULATED_JOB_COUNT_TREND, $shortTrend, $longTrend, $suggestedProcessCount, $queues);
+        $message = sprintf(self::CALCULATED_JOB_COUNT_TREND, $shortTrend, $longTrend, $suggestedProcessCount, $queues);
+        var_dump($message);
+        return $message;
     }
     
     /**
